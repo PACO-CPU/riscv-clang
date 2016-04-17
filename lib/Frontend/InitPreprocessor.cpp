@@ -323,6 +323,12 @@ static void InitializeStandardPredefinedMacros(const TargetInfo &TI,
   // Not "standard" per se, but available even with the -undef flag.
   if (LangOpts.AsmPreprocessor)
     Builder.defineMacro("__ASSEMBLER__");
+
+  
+  // Paderborn CPU core for approximate computing identifying macro
+  if (LangOpts.PACO)
+    Builder.defineMacro("__paco");
+
 }
 
 static void InitializePredefinedMacros(const TargetInfo &TI,
