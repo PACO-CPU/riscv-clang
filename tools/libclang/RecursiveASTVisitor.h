@@ -1216,6 +1216,7 @@ DEF_TRAVERSE_DECL(FileScopeAsmDecl, {
   })
 
 DEF_TRAVERSE_DECL(ImportDecl, { })
+DEF_TRAVERSE_DECL(ApproxDecoratorDecl, { })
 
 DEF_TRAVERSE_DECL(FriendDecl, {
     // Friend is either decl or a type.
