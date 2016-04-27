@@ -3338,6 +3338,45 @@ public:
   static bool classofKind(Kind K) { return K == Empty; }
 };
 
+/// ApproxDecoratorDecl - This represents an approx decorator for use with 
+/// PACO.
+class ApproxDecoratorDecl : public Decl {
+
+private:
+//  NamedDecl *getUnderlyingDeclImpl();
+//  void verifyLinkage() const;
+
+protected:
+  ApproxDecoratorDecl(DeclContext *DC, SourceLocation StartLoc);
+
+public:
+  //bool hasLinkage() const;
+  static ApproxDecoratorDecl *Create(ASTContext &C, DeclContext *DC,
+                               SourceLocation StartLoc
+                               );
+
+  static ApproxDecoratorDecl *CreateDeserialized(ASTContext &C, unsigned ID);
+
+  using Decl::isModulePrivate;
+  using Decl::setModulePrivate;
+ 
+  //Linkage getLinkage() const;
+
+  /// \brief True if this decl has external linkage.
+  /*
+  bool hasExternalLinkage() const {
+    return getLinkage() == ExternalLinkage;
+  }
+  */
+  /// \brief True if the computed linkage is valid. Used for consistency
+  /// checking. Should always return true.
+  //bool isLinkageValid() const;
+
+  static bool classof(const Decl *D) { return classofKind(D->getKind()); }
+  static bool classofKind(Kind K) { return K >= firstNamed && K <= lastNamed; }
+};
+
+
 /// Insertion operator for diagnostics.  This allows sending NamedDecl's
 /// into a diagnostic with <<.
 inline const DiagnosticBuilder &operator<<(const DiagnosticBuilder &DB,

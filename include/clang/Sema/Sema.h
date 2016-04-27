@@ -7206,6 +7206,9 @@ public:
                            IdentifyCUDATarget(Callee));
   }
 
+
+  Decl *ActOnApproxDecorator(Scope *CurScope,SourceLocation ApproxLoc);
+
   /// \name Code completion
   //@{
   /// \brief Describes the context in which code completion occurs.

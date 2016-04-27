@@ -1378,6 +1378,9 @@ Parser::DeclGroupPtrTy Parser::ParseDeclaration(StmtVector &Stmts,
     ProhibitAttributes(attrs);
     SingleDecl = ParseStaticAssertDeclaration(DeclEnd);
     break;
+  case tok::kw_approx:
+    SingleDecl=ParseApproxDecorator(DeclEnd);
+    break;
   default:
     return ParseSimpleDeclaration(Stmts, Context, DeclEnd, attrs, true);
   }
@@ -5624,4 +5627,18 @@ bool Parser::TryAltiVecTokenOutOfLine(DeclSpec &DS, SourceLocation Loc,
     return true;
   }
   return false;
+}
+
+Decl *Parser::ParseApproxDecorator(SourceLocation &DeclEnd) {
+ 
+  assert(Tok.is(tok::kw_approx));
+
+  // Eat 'approx'.
+  SourceLocation ApproxLoc=ConsumeToken();
+  ExpectAndConsume(tok::l_paren,diag::err_expected_lparen,"",tok::l_paren);
+
+  // todo: parse key-values
+
+  ExpectAndConsume(tok::r_paren,diag::err_expected_rparen,"",tok::r_paren);
+  return Actions.ActOnApproxDecorator(getCurScope(),ApproxLoc);
 }

@@ -566,6 +566,7 @@ unsigned Decl::getIdentifierNamespaceForKind(Kind DeclKind) {
     case Import:
     case OMPThreadPrivate:
     case Empty:
+    case ApproxDecorator:
       // Never looked up by name.
       return 0;
   }

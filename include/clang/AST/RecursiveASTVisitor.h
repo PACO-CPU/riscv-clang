@@ -1824,6 +1824,8 @@ DEF_TRAVERSE_DECL(ParmVarDecl, {
       TRY_TO(TraverseStmt(D->getDefaultArg()));
   })
 
+DEF_TRAVERSE_DECL(ApproxDecoratorDecl, { return true; })
+
 #undef DEF_TRAVERSE_DECL
 
 // ----------------- Stmt traversal -----------------
@@ -2268,6 +2270,7 @@ DEF_TRAVERSE_STMT(ObjCDictionaryLiteral, { })
   
 // Traverse OpenCL: AsType, Convert.
 DEF_TRAVERSE_STMT(AsTypeExpr, { })
+
 
 // FIXME: look at the following tricky-seeming exprs to see if we
 // need to recurse on anything.  These are ones that have methods

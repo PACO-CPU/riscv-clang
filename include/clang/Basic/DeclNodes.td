@@ -78,4 +78,5 @@ def ClassScopeFunctionSpecialization : Decl;
 def Import : Decl;
 def OMPThreadPrivate : Decl;
 def Empty : Decl;
+def ApproxDecorator : Decl;
 

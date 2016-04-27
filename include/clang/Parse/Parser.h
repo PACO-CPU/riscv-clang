@@ -2221,6 +2221,11 @@ private:
   ExprResult ParseExpressionTrait();
 
   //===--------------------------------------------------------------------===//
+  // PACO approx decorator
+  
+  Decl *ParseApproxDecorator(SourceLocation &DeclEnd);
+
+  //===--------------------------------------------------------------------===//
   // Preprocessor code-completion pass-through
   virtual void CodeCompleteDirective(bool InConditional);
   virtual void CodeCompleteInConditionalExclusion();
