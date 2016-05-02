@@ -153,6 +153,7 @@ def err_expected_external_declaration : Error<"expected external declaration">;
 def err_extraneous_closing_brace : Error<"extraneous closing brace ('}')">;
 def err_expected_ident : Error<"expected identifier">;
 def err_expected_ident_lparen : Error<"expected identifier or '('">;
+def err_expected_ident_rparen : Error<"Expected identifier or ')'">;
 def err_expected_ident_lbrace : Error<"expected identifier or '{'">;
 def err_expected_lbrace : Error<"expected '{'">;
 def err_expected_lparen : Error<"expected '('">;
@@ -825,6 +826,16 @@ def err_omp_unknown_directive : Error <
   "expected an OpenMP directive">;
 def err_omp_unexpected_directive : Error <
   "unexpected OpenMP directive '#pragma omp %0'">;
+
+// PACO specifics
+def err_expected_approx_kv_data : Error<
+  "Expected approx key-value data: String or numeric literal">;
+
+def err_approx_data_not_constant : Error<
+  "Numeric decorator data must be constant">;
+def err_approx_data_not_num : Error<
+  "Numeric decorator data must be (complex) int or float">;
+
 
 } // end of Parse Issue category.
 

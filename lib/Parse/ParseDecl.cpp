@@ -24,6 +24,9 @@
 #include "llvm/ADT/SmallSet.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringSwitch.h"
+
+#include <stdio.h>
+
 using namespace clang;
 
 //===----------------------------------------------------------------------===//
@@ -5632,13 +5635,89 @@ bool Parser::TryAltiVecTokenOutOfLine(DeclSpec &DS, SourceLocation Loc,
 Decl *Parser::ParseApproxDecorator(SourceLocation &DeclEnd) {
  
   assert(Tok.is(tok::kw_approx));
+  printf("approx\n");
+  IdentifierInfo *inf_ident;
+  ExprResult expr;
+  Expr::EvalResult expr_val;
+  Token expr_tok;
 
-  // Eat 'approx'.
+  // Eat 'approx' and '('.
   SourceLocation ApproxLoc=ConsumeToken();
   ExpectAndConsume(tok::l_paren,diag::err_expected_lparen,"",tok::l_paren);
 
-  // todo: parse key-values
+  while (!Tok.is(tok::r_paren)) {
+    // expect an identifier
+    if (!Tok.is(tok::identifier)) {
+      Diag(Tok,diag::err_expected_ident_rparen);
+      // todo: figure out what the second and third arguments do:
+      // todo: look for a parenthesis-balancing version
+      SkipUntil(tok::r_paren,true,true); 
+      return 0;
+    }
+    inf_ident=Tok.getIdentifierInfo();
+    printf("  %s = ",inf_ident->getNameStart());
+    ConsumeToken();
 
-  ExpectAndConsume(tok::r_paren,diag::err_expected_rparen,"",tok::r_paren);
+    // todo: evaluate the identifier / remember token/attribute
+
+    // Eat '='
+    if (
+      ExpectAndConsume(
+        tok::equal,diag::err_expected_equal_after,"",tok::r_paren)) 
+      return 0;
+
+    // parse value
+    //   we assume this is either a string literal or an expression that 
+    //   is evaluable to a constant of type int/float or their complex
+    //   counterpart.
+
+    if (Tok.is(tok::string_literal)) {
+      printf("'%.*s'\n",Tok.getLength(),Tok.getLiteralData());
+      ConsumeToken();
+      // todo: add string key-value
+    } else {
+      expr_tok=Tok;
+      expr=ParseExpression();
+      // todo: add numeric key-value
+      if (!expr.get()->EvaluateAsRValue(expr_val,Actions.getASTContext())) {
+        // fixme: this should be done in semantic analysis instead of parsing
+        Diag(Tok,diag::err_approx_data_not_constant);
+        SkipUntil(tok::r_paren,true,true);
+        return 0;
+      }
+
+      switch(expr_val.Val.getKind()) {
+        case APValue::Int:
+          
+          printf(
+            "(int)%lli\n",
+            (int64_t)expr_val.Val.getInt().getLimitedValue());
+          break;
+        case APValue::Float:
+          printf("(float)%g\n",expr_val.Val.getFloat().convertToDouble());
+          break;
+        case APValue::ComplexInt:
+          printf(
+            "(cint)%lli + i*%lli\n",
+            (int64_t)expr_val.Val.getComplexIntReal().getLimitedValue(),
+            (int64_t)expr_val.Val.getComplexIntImag().getLimitedValue());
+          break;
+        case APValue::ComplexFloat:
+          printf(
+            "(cfloat)%g + i*%g\n",
+            expr_val.Val.getComplexFloatReal().convertToDouble(),
+            expr_val.Val.getComplexFloatImag().convertToDouble());
+          break;
+        default:
+          Diag(Tok,diag::err_approx_data_not_num);
+          SkipUntil(tok::r_paren,true,true);
+          return 0;
+      }
+
+    }
+  }
+  ConsumeParen();
+
+  // todo: hand off parsed data to AST node generation
   return Actions.ActOnApproxDecorator(getCurScope(),ApproxLoc);
 }
