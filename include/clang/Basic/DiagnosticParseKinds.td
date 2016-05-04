@@ -831,11 +831,6 @@ def err_omp_unexpected_directive : Error <
 def err_expected_approx_kv_data : Error<
   "Expected approx key-value data: String or numeric literal">;
 
-def err_approx_data_not_constant : Error<
-  "Numeric decorator data must be constant">;
-def err_approx_data_not_num : Error<
-  "Numeric decorator data must be (complex) int or float">;
-
 
 } // end of Parse Issue category.
 

@@ -5638,8 +5638,9 @@ Decl *Parser::ParseApproxDecorator(SourceLocation &DeclEnd) {
   printf("approx\n");
   IdentifierInfo *inf_ident;
   ExprResult expr;
-  Expr::EvalResult expr_val;
-  Token expr_tok;
+  ApproxDecoratorDecl::KeyValue *keyvalue;
+
+  SmallVector<ApproxDecoratorDecl::KeyValue*, 8> keyvalues;
 
   // Eat 'approx' and '('.
   SourceLocation ApproxLoc=ConsumeToken();
@@ -5655,10 +5656,7 @@ Decl *Parser::ParseApproxDecorator(SourceLocation &DeclEnd) {
       return 0;
     }
     inf_ident=Tok.getIdentifierInfo();
-    printf("  %s = ",inf_ident->getNameStart());
     ConsumeToken();
-
-    // todo: evaluate the identifier / remember token/attribute
 
     // Eat '='
     if (
@@ -5670,54 +5668,20 @@ Decl *Parser::ParseApproxDecorator(SourceLocation &DeclEnd) {
     //   we assume this is either a string literal or an expression that 
     //   is evaluable to a constant of type int/float or their complex
     //   counterpart.
-
+    
+    SourceLocation exprLoc=Tok.getLocation();
     if (Tok.is(tok::string_literal)) {
-      printf("'%.*s'\n",Tok.getLength(),Tok.getLiteralData());
-      ConsumeToken();
-      // todo: add string key-value
+      expr=ParseStringLiteralExpression(true);
     } else {
-      expr_tok=Tok;
       expr=ParseExpression();
-      // todo: add numeric key-value
-      if (!expr.get()->EvaluateAsRValue(expr_val,Actions.getASTContext())) {
-        // fixme: this should be done in semantic analysis instead of parsing
-        Diag(Tok,diag::err_approx_data_not_constant);
-        SkipUntil(tok::r_paren,true,true);
-        return 0;
-      }
-
-      switch(expr_val.Val.getKind()) {
-        case APValue::Int:
-          
-          printf(
-            "(int)%lli\n",
-            (int64_t)expr_val.Val.getInt().getLimitedValue());
-          break;
-        case APValue::Float:
-          printf("(float)%g\n",expr_val.Val.getFloat().convertToDouble());
-          break;
-        case APValue::ComplexInt:
-          printf(
-            "(cint)%lli + i*%lli\n",
-            (int64_t)expr_val.Val.getComplexIntReal().getLimitedValue(),
-            (int64_t)expr_val.Val.getComplexIntImag().getLimitedValue());
-          break;
-        case APValue::ComplexFloat:
-          printf(
-            "(cfloat)%g + i*%g\n",
-            expr_val.Val.getComplexFloatReal().convertToDouble(),
-            expr_val.Val.getComplexFloatImag().convertToDouble());
-          break;
-        default:
-          Diag(Tok,diag::err_approx_data_not_num);
-          SkipUntil(tok::r_paren,true,true);
-          return 0;
-      }
-
     }
+
+    keyvalue=Actions.ActOnApproxDecoratorKeyValue(inf_ident,expr,exprLoc);
+    if (keyvalue!=NULL)
+      keyvalues.push_back(keyvalue);
   }
   ConsumeParen();
 
-  // todo: hand off parsed data to AST node generation
-  return Actions.ActOnApproxDecorator(getCurScope(),ApproxLoc);
+  return Actions.ActOnApproxDecorator(
+    getCurScope(),ApproxLoc,keyvalues.data(),keyvalues.size());
 }

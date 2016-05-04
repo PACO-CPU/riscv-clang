@@ -37,15 +37,72 @@
 #include <map>
 #include <set>
 
+#include <stdio.h>
+
 using namespace clang;
 
-Decl *Sema::ActOnApproxDecorator(Scope *S,SourceLocation ApproxLoc) {
+Decl *Sema::ActOnApproxDecorator(
+  Scope *S,SourceLocation ApproxLoc,
+  ApproxDecoratorDecl::KeyValue **keyvalues,
+  size_t keyvalue_count) {
   ApproxDecoratorDecl *ADec = 0;
 
   ADec=ApproxDecoratorDecl::Create(Context,CurContext,ApproxLoc);
 
-  // todo: analyze key-values
+  for(size_t i=0;i<keyvalue_count;i++)
+    ADec->appendKeyValue(keyvalues[i]);
 
   return ADec;
 }
 
+ApproxDecoratorDecl::KeyValue *Sema::ActOnApproxDecoratorKeyValue(
+  IdentifierInfo *ident, ExprResult exprNode, SourceLocation exprLoc) {
+
+  Expr *expr=exprNode.get();
+  Expr::EvalResult val;
+  StringLiteral *lit;
+
+  printf("  %s = ",ident->getNameStart());
+
+  if (StringLiteral::classof(expr)) { // string key-value
+    lit=reinterpret_cast<StringLiteral*>(expr);
+    StringRef r=lit->getString();
+    printf("'%.*s'\n",r.size(),r.data());
+    return new ApproxDecoratorDecl::KeyValue(ident,lit->getString());
+
+  } else { // numeric key-value
+    if (!expr->EvaluateAsRValue(val,getASTContext())) {
+      Diag(exprLoc,diag::err_approx_data_not_constant);
+      return 0;
+    }
+    
+    switch(val.Val.getKind()) {
+      case APValue::Int:
+        
+        printf(
+          "(int)%lli\n",
+          (int64_t)val.Val.getInt().getLimitedValue());
+        break;
+      case APValue::Float:
+        printf("(float)%g\n",val.Val.getFloat().convertToDouble());
+        break;
+      case APValue::ComplexInt:
+        printf(
+          "(cint)%lli + i*%lli\n",
+          (int64_t)val.Val.getComplexIntReal().getLimitedValue(),
+          (int64_t)val.Val.getComplexIntImag().getLimitedValue());
+        break;
+      case APValue::ComplexFloat:
+        printf(
+          "(cfloat)%g + i*%g\n",
+          val.Val.getComplexFloatReal().convertToDouble(),
+          val.Val.getComplexFloatImag().convertToDouble());
+        break;
+      default:
+        Diag(exprLoc,diag::err_approx_data_not_num);
+        return 0;
+    }
+    return new ApproxDecoratorDecl::KeyValue(ident,val.Val);
+  }
+
+}

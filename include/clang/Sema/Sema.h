@@ -7207,7 +7207,11 @@ public:
   }
 
 
-  Decl *ActOnApproxDecorator(Scope *CurScope,SourceLocation ApproxLoc);
+  ApproxDecoratorDecl::KeyValue *ActOnApproxDecoratorKeyValue(
+    IdentifierInfo *ident, ExprResult exprNode, SourceLocation exprLoc);
+  Decl *ActOnApproxDecorator(
+    Scope *CurScope,SourceLocation ApproxLoc,
+    ApproxDecoratorDecl::KeyValue **keyvalues, size_t keyvalue_count);
 
   /// \name Code completion
   //@{

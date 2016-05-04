@@ -3342,15 +3342,58 @@ public:
 /// PACO.
 class ApproxDecoratorDecl : public Decl {
 
+public:
+  class KeyValue {
+    friend class ApproxDecoratorDecl;
+
+  public:
+    
+    enum Kind {
+      String,
+      Numeric
+    };
+  
+  protected:
+    IdentifierInfo *_ident;
+    Kind _kind; 
+
+    StringRef _str;
+    APValue   _num;
+  public:
+    KeyValue(IdentifierInfo *ident, const StringRef &str) : 
+      _ident(ident), _kind(String), _str(str) { }
+    KeyValue(IdentifierInfo *ident, const APValue   &num) : 
+      _ident(ident), _kind(Numeric), _num(num) { }
+    
+    IdentifierInfo *getIdent() const {
+      return _ident;
+    }
+
+    Kind getKind() const {
+      return _kind;
+    }
+
+    StringRef getStr() const {
+      assert(_kind==String && "Not a string KeyValue!");
+      return _str;
+    }
+
+    APValue getNum() const {
+      assert(_kind==Numeric && "Not a numeric KeyValue!");
+      return _num;
+    }
+
+  };
+
 private:
 //  NamedDecl *getUnderlyingDeclImpl();
 //  void verifyLinkage() const;
 
 protected:
   ApproxDecoratorDecl(DeclContext *DC, SourceLocation StartLoc);
+  std::vector<KeyValue*> _keyvalues;
 
 public:
-  //bool hasLinkage() const;
   static ApproxDecoratorDecl *Create(ASTContext &C, DeclContext *DC,
                                SourceLocation StartLoc
                                );
@@ -3359,19 +3402,14 @@ public:
 
   using Decl::isModulePrivate;
   using Decl::setModulePrivate;
- 
-  //Linkage getLinkage() const;
 
-  /// \brief True if this decl has external linkage.
-  /*
-  bool hasExternalLinkage() const {
-    return getLinkage() == ExternalLinkage;
+  const std::vector<KeyValue*> &getKeyValues() {
+    return _keyvalues;
   }
-  */
-  /// \brief True if the computed linkage is valid. Used for consistency
-  /// checking. Should always return true.
-  //bool isLinkageValid() const;
-
+  
+  void appendKeyValue(KeyValue *kv) {
+    _keyvalues.push_back(kv);
+  }
   static bool classof(const Decl *D) { return classofKind(D->getKind()); }
   static bool classofKind(Kind K) { return K >= firstNamed && K <= lastNamed; }
 };

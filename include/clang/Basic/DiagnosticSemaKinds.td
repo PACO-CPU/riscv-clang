@@ -6395,4 +6395,11 @@ def warn_not_a_doxygen_trailing_member_comment : Warning<
   "not a Doxygen trailing comment">, InGroup<Documentation>, DefaultIgnore;
 } // end of documentation issue category
 
+// PACO specifics
+
+def err_approx_data_not_constant : Error<
+  "Numeric decorator data must be constant">;
+def err_approx_data_not_num : Error<
+  "Numeric decorator data must be (complex) int or float">;
+
 } // end of sema component.
