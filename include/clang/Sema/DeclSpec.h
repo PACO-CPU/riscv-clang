@@ -24,6 +24,7 @@
 #define LLVM_CLANG_SEMA_DECLSPEC_H
 
 #include "clang/AST/NestedNameSpecifier.h"
+#include "clang/AST/Decl.h"
 #include "clang/Basic/ExceptionSpecificationType.h"
 #include "clang/Basic/Lambda.h"
 #include "clang/Basic/OperatorKinds.h"
@@ -367,6 +368,10 @@ private:
   SourceLocation ProtocolLAngleLoc;
   SourceLocation *ProtocolLocs;
 
+  // PACO approximate decorator
+
+  ApproxDecoratorDecl *ApproxDecorator;
+
   // SourceLocation info.  These are null if the item wasn't specified or if
   // the setting was synthesized.
   SourceRange Range;
@@ -382,6 +387,7 @@ private:
   SourceLocation TQ_constLoc, TQ_restrictLoc, TQ_volatileLoc, TQ_atomicLoc;
   SourceLocation FS_inlineLoc, FS_virtualLoc, FS_explicitLoc, FS_noreturnLoc;
   SourceLocation FriendLoc, ModulePrivateLoc, ConstexprLoc;
+  SourceLocation ApproxDecoratorLoc;
 
   WrittenBuiltinSpecs writtenBS;
   void SaveWrittenBuiltinSpecs();
@@ -644,6 +650,9 @@ public:
   bool SetConstexprSpec(SourceLocation Loc, const char *&PrevSpec,
                         unsigned &DiagID);
 
+  bool SetApproxDecorator(ApproxDecoratorDecl *approx, SourceLocation Loc,
+                          const char *&PrevSpec, unsigned &DiagID);
+
   bool isFriendSpecified() const { return Friend_specified; }
   SourceLocation getFriendSpecLoc() const { return FriendLoc; }
 
@@ -657,6 +666,7 @@ public:
     Constexpr_specified = false;
     ConstexprLoc = SourceLocation();
   }
+  
 
   AttributePool &getAttributePool() const {
     return Attrs.getPool();
@@ -726,6 +736,7 @@ public:
 
   ObjCDeclSpec *getObjCQualifiers() const { return ObjCQualifiers; }
   void setObjCQualifiers(ObjCDeclSpec *quals) { ObjCQualifiers = quals; }
+
 
   /// \brief Checks if this DeclSpec can stand alone, without a Declarator.
   ///

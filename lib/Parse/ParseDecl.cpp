@@ -3091,6 +3091,34 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
       // Need to support trailing type qualifiers (e.g. "id<p> const").
       // If a type specifier follows, it will be diagnosed elsewhere.
       continue;
+
+    case tok::kw_approx: {
+      Decl *decl;
+      ApproxDecoratorDecl *decorator;
+      SourceLocation locEnd;
+      if (!getLangOpts().PACO)
+        goto DoneWithDeclSpec;
+
+      decl=ParseApproxDecorator(locEnd);
+
+      // todo: figure out if this is the correct action to take in case of 
+      // error.
+      if (decl==NULL) break;
+
+      assert(
+        ApproxDecoratorDecl::classof(decl) && 
+        "ParseApproxDecorator did not return an ApproxDecoratorDecl!");
+
+      decorator=reinterpret_cast<ApproxDecoratorDecl*>(decl);
+      
+      DS.SetApproxDecorator(decorator,Loc,PrevSpec,DiagID);
+
+      DS.SetRangeEnd(Tok.getLocation());
+      // todo: figure out what this does and, if needed, remove
+      AttrsLastTime=false;
+      continue;
+
+    }
     }
     // If the specifier wasn't legal, issue a diagnostic.
     if (isInvalid) {

@@ -800,6 +800,15 @@ bool DeclSpec::SetConstexprSpec(SourceLocation Loc, const char *&PrevSpec,
   return false;
 }
 
+bool DeclSpec::SetApproxDecorator(ApproxDecoratorDecl *approx, 
+                                  SourceLocation Loc,
+                                  const char *&PrevSpec, unsigned &DiagID) {
+  ApproxDecorator = approx;
+  ApproxDecoratorLoc = Loc;
+
+  return false;
+}
+
 void DeclSpec::setProtocolQualifiers(Decl * const *Protos,
                                      unsigned NP,
                                      SourceLocation *ProtoLocs,
