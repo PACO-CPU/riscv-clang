@@ -3411,7 +3411,7 @@ public:
     _keyvalues.push_back(kv);
   }
   static bool classof(const Decl *D) { return classofKind(D->getKind()); }
-  static bool classofKind(Kind K) { return K >= firstNamed && K <= lastNamed; }
+  static bool classofKind(Kind K) { return K == ApproxDecorator; }
 };
 
 
