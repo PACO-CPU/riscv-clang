@@ -91,7 +91,7 @@ def err_enumerator_list_missing_comma : Error<
 def err_enumerator_unnamed_no_def : Error<
   "unnamed enumeration must be a definition">;
 def ext_cxx11_enum_fixed_underlying_type : Extension<
-  "enumeration types with a fixed underlying type are a C++11 extension">, 
+  "enumeration types with a fixed underlying type are a C++11 extension">,
   InGroup<CXX11>;
 def ext_c_enum_fixed_underlying_type : Extension<
   "enumeration types with a fixed underlying type are a Microsoft extension">,
@@ -106,7 +106,7 @@ def ext_alignof_expr : ExtWarn<
   "%0 applied to an expression is a GNU extension">, InGroup<GNU>;
 
 def warn_microsoft_dependent_exists : Warning<
-  "dependent %select{__if_not_exists|__if_exists}0 declarations are ignored">, 
+  "dependent %select{__if_not_exists|__if_exists}0 declarations are ignored">,
   InGroup<DiagGroup<"microsoft-exists">>;
 
 def ext_c11_generic_selection : Extension<
@@ -134,14 +134,14 @@ def ext_gnu_conditional_expr : Extension<
   "use of GNU ?: expression extension, eliding middle term">, InGroup<GNU>;
 def ext_gnu_empty_initializer : Extension<
   "use of GNU empty initializer extension">, InGroup<GNU>;
-def ext_gnu_array_range : Extension<"use of GNU array range extension">, 
+def ext_gnu_array_range : Extension<"use of GNU array range extension">,
   InGroup<GNUDesignator>;
 def ext_gnu_missing_equal_designator : ExtWarn<
-  "use of GNU 'missing =' extension in designator">, 
+  "use of GNU 'missing =' extension in designator">,
   InGroup<GNUDesignator>;
 def err_expected_equal_designator : Error<"expected '=' or another designator">;
 def ext_gnu_old_style_field_designator : ExtWarn<
-  "use of GNU old-style field designator extension">, 
+  "use of GNU old-style field designator extension">,
   InGroup<GNUDesignator>;
 def ext_gnu_case_range : Extension<"use of GNU case range extension">,
   InGroup<GNU>;
@@ -184,10 +184,10 @@ def err_at_in_class : Error<"unexpected '@' in member specification">;
 def err_expected_fn_body : Error<
   "expected function body after function declarator">;
 def warn_attribute_on_function_definition : Warning<
-  "GCC does not allow %0 attribute in this position on a function definition">, 
+  "GCC does not allow %0 attribute in this position on a function definition">,
   InGroup<GccCompat>;
 def warn_attribute_no_decl : Warning<
-  "attribute %0 ignored, because it is not attached to a declaration">, 
+  "attribute %0 ignored, because it is not attached to a declaration">,
   InGroup<IgnoredAttributes>;
 def err_expected_method_body : Error<"expected method body">;
 def err_invalid_token_after_toplevel_declarator : Error<
@@ -310,7 +310,7 @@ def warn_cxx98_compat_decltype : Warning<
 def err_unexpected_scope_on_base_decltype : Error<
   "unexpected namespace scope prior to decltype">;
 def err_expected_class_name : Error<"expected class name">;
-def err_expected_class_name_not_template : 
+def err_expected_class_name_not_template :
   Error<"'typename' is redundant; base classes are implicitly types">;
 def err_unspecified_vla_size_with_static : Error<
   "'static' may not be used with an unspecified variable length array size">;
@@ -396,7 +396,7 @@ def warn_arc_bridge_cast_nonarc : Warning<
   "'%0' casts have no effect when not using ARC">,
   InGroup<DiagGroup<"arc-bridge-casts-disallowed-in-nonarc">>;
 }
-  
+
 def err_objc_illegal_visibility_spec : Error<
   "illegal visibility specification">;
 def err_objc_illegal_interface_qual : Error<"illegal interface qualifier">;
@@ -611,7 +611,7 @@ def warn_cxx98_compat_extern_template : Warning<
 def warn_static_inline_explicit_inst_ignored : Warning<
   "ignoring '%select{static|inline}0' keyword on explicit template "
   "instantiation">;
-  
+
 // Constructor template diagnostics.
 def err_out_of_line_constructor_template_id : Error<
   "out-of-line constructor for %0 cannot have template arguments">;
@@ -636,11 +636,11 @@ def err_expected_type_name_after_typename : Error<
 def err_explicit_spec_non_template : Error<
   "explicit %select{specialization|instantiation}0 of non-template "
   "%select{class|struct|union|interface}1 %2">;
-  
+
 def err_default_template_template_parameter_not_template : Error<
   "default template argument for a template template parameter must be a class "
   "template">;
-  
+
 def err_ctor_init_missing_comma : Error<
   "missing ',' between base or member initializers">;
 
@@ -685,7 +685,7 @@ def err_alias_declaration_not_identifier : Error<
   "name defined in alias declaration must be an identifier">;
 def err_alias_declaration_specialization : Error<
   "%select{partial specialization|explicit specialization|explicit instantiation}0 of alias templates is not permitted">;
-    
+
 // C++11 override control
 def ext_override_control_keyword : ExtWarn<
   "'%0' keyword is a C++11 extension">, InGroup<CXX11>;
@@ -760,11 +760,11 @@ def warn_pragma_expected_lparen : Warning<
 def warn_pragma_expected_rparen : Warning<
   "missing ')' after '#pragma %0' - ignoring">;
 def warn_pragma_expected_identifier : Warning<
-  "expected identifier in '#pragma %0' - ignored">;  
+  "expected identifier in '#pragma %0' - ignored">;
 def warn_pragma_ms_struct : Warning<
-  "incorrect use of '#pragma ms_struct on|off' - ignored">;  
+  "incorrect use of '#pragma ms_struct on|off' - ignored">;
 def warn_pragma_extra_tokens_at_eol : Warning<
-  "extra tokens at end of '#pragma %0' - ignored">; 
+  "extra tokens at end of '#pragma %0' - ignored">;
 // - #pragma options
 def warn_pragma_options_expected_align : Warning<
   "expected 'align' following '#pragma options' - ignored">;
@@ -785,7 +785,7 @@ def warn_pragma_unused_expected_punc : Warning<
 // - #pragma fp_contract
 def err_pragma_fp_contract_scope : Error<
   "'#pragma fp_contract' should only appear at file scope or at the start of a "
-  "compound expression">; 
+  "compound expression">;
 // - #pragma comment
 def err_pragma_comment_malformed : Error<
   "pragma comment requires parenthesized identifier and optional string">;
@@ -830,7 +830,15 @@ def err_omp_unexpected_directive : Error <
 // PACO specifics
 def err_expected_approx_kv_data : Error<
   "Expected approx key-value data: String or numeric literal">;
-
+  //TODO: add the error messages here
+def err_pragma_combine_malformed : Error<
+  "pragma paco combine requires the identifier 'paco', 'combine' and a combine mode such as 'most-precise' or 'least-precise'">;
+def err_pragma_combine_option_not_set : Error<
+  "invalid paco combine option in '#pragma paco combine' or option not set - please use 'most-precise' or 'least-precise'">;
+def err_pragma_intermediateliteral_malformed : Error<
+  "pragma paco intermediateliteral requires the identifier 'paco', 'intermediateliteral' and an intermediateliteral mode such as 'most-precise' or 'least-precise'">;
+def err_pragma_intermediateliteral_option_not_set : Error<
+  "invalid paco intermediateliteral option in '#pragma paco intermediateliteral' or option not set - please use 'most-precise' or 'least-precise'">;
 
 } // end of Parse Issue category.
 

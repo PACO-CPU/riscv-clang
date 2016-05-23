@@ -259,6 +259,24 @@ public:
   /// VisContext - Manages the stack for \#pragma GCC visibility.
   void *VisContext; // Really a "PragmaVisStack*"
 
+  /// Mode for PACO pragma combine
+  enum PragmaPACOCombineMode{
+    PPACOCM_LeastPrecise,
+    PPACOCM_MostPrecise,
+    PPACOCM_Error
+  };
+
+  /// Mode for PACO pragma intermediate-literal
+  enum PragmaPACOIntermediateLiteralMode{
+    PPACOILM_Precise,
+    PPACOILM_Mimic,
+    PPACOILM_Error
+  };
+
+  PragmaPACOCombineMode PACOCombineMode;
+
+  PragmaPACOIntermediateLiteralMode PACOIntermediateLiteralMode;
+
   /// \brief Flag indicating if Sema is building a recovery call expression.
   ///
   /// This flag is used to avoid building recovery call expressions
@@ -496,15 +514,15 @@ public:
   class SynthesizedFunctionScope {
     Sema &S;
     Sema::ContextRAII SavedContext;
-    
+
   public:
     SynthesizedFunctionScope(Sema &S, DeclContext *DC)
-      : S(S), SavedContext(S, DC) 
+      : S(S), SavedContext(S, DC)
     {
       S.PushFunctionScope();
       S.PushExpressionEvaluationContext(Sema::PotentiallyEvaluated);
     }
-    
+
     ~SynthesizedFunctionScope() {
       S.PopExpressionEvaluationContext();
       S.PopFunctionScopeInfo();
@@ -595,13 +613,13 @@ public:
 
   /// \brief will hold 'respondsToSelector:'
   Selector RespondsToSelectorSel;
-  
+
   /// A flag to remember whether the implicit forms of operator new and delete
   /// have been declared.
   bool GlobalNewDeleteDeclared;
 
   /// A flag to indicate that we're in a context that permits abstract
-  /// references to fields.  This is really a 
+  /// references to fields.  This is really a
   bool AllowAbstractFieldReference;
 
   /// \brief Describes how the expressions currently being parsed are
@@ -2071,7 +2089,7 @@ public:
                                    OverloadCandidateSet& CandidateSet,
                                    SourceRange OpRange = SourceRange());
   void AddBuiltinCandidate(QualType ResultTy, QualType *ParamTys,
-                           ArrayRef<Expr *> Args, 
+                           ArrayRef<Expr *> Args,
                            OverloadCandidateSet& CandidateSet,
                            bool IsAssignmentOperator = false,
                            unsigned NumContextualBoolArguments = 0);
@@ -2432,7 +2450,7 @@ public:
   void checkUnusedDeclAttributes(Declarator &D);
 
   bool CheckRegparmAttr(const AttributeList &attr, unsigned &value);
-  bool CheckCallingConvAttr(const AttributeList &attr, CallingConv &CC, 
+  bool CheckCallingConvAttr(const AttributeList &attr, CallingConv &CC,
                             const FunctionDecl *FD = 0);
   bool CheckNoReturnAttr(const AttributeList &attr);
   void CheckAlignasUnderalignment(Decl *D);
@@ -2500,13 +2518,13 @@ public:
   void CollectImmediateProperties(ObjCContainerDecl *CDecl,
             llvm::DenseMap<IdentifierInfo *, ObjCPropertyDecl*>& PropMap,
             llvm::DenseMap<IdentifierInfo *, ObjCPropertyDecl*>& SuperPropMap);
-  
+
   /// IvarBacksCurrentMethodAccessor - This routine returns 'true' if 'IV' is
   /// an ivar synthesized for 'Method' and 'Method' is a property accessor
   /// declared in class 'IFace'.
   bool IvarBacksCurrentMethodAccessor(ObjCInterfaceDecl *IFace,
                                       ObjCMethodDecl *Method, ObjCIvarDecl *IV);
-  
+
   /// Called by ActOnProperty to handle \@property declarations in
   /// class extensions.
   ObjCPropertyDecl *HandlePropertyInClassExtension(Scope *S,
@@ -6540,7 +6558,7 @@ public:
                                   ParsedType Type,
                                   SourceLocation RParenLoc,
                                   Expr *SubExpr);
-  
+
   bool checkInitMethod(ObjCMethodDecl *method, QualType receiverTypeIfCall);
 
   /// \brief Check whether the given new method is a valid override of the
@@ -6631,6 +6649,14 @@ public:
   /// ActOnPragmaFPContract - Called on well formed
   /// \#pragma {STDC,OPENCL} FP_CONTRACT
   void ActOnPragmaFPContract(tok::OnOffSwitch OOS);
+
+  /// ActOnPragmaPACOCombine - Called on well formed
+  /// \#pragma paco combine {mode}
+  void ActOnPragmaPACOCombine(Sema::PragmaPACOCombineMode Mode);
+
+  /// ActOnPragmaPACOIntermediateLiteral - Called on well formed
+  /// \#pragma paco intermediateliteral {mode}
+  void ActOnPragmaPACOIntermediateLiteral(Sema::PragmaPACOIntermediateLiteralMode Mode);
 
   /// AddAlignmentAttributesForRecord - Adds any needed alignment attributes to
   /// a the record decl, to handle '\#pragma pack' and '\#pragma options align'.
@@ -7570,7 +7596,7 @@ public:
   }
 
   AvailabilityResult getCurContextAvailability() const;
-  
+
   const DeclContext *getCurObjCLexicalContext() const {
     const DeclContext *DC = getCurLexicalContext();
     // A category implicitly has the attribute of the interface.
@@ -7598,7 +7624,7 @@ public:
                                    Sema::ReuseLambdaContextDecl_t,
                                    bool IsDecltype = false)
     : Actions(Actions) {
-    Actions.PushExpressionEvaluationContext(NewContext, 
+    Actions.PushExpressionEvaluationContext(NewContext,
                                             Sema::ReuseLambdaContextDecl,
                                             IsDecltype);
   }

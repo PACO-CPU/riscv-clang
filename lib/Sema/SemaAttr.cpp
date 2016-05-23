@@ -18,6 +18,7 @@
 #include "clang/Basic/TargetInfo.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/Lookup.h"
+#include "stdio.h"
 using namespace clang;
 
 //===----------------------------------------------------------------------===//
@@ -259,7 +260,7 @@ void Sema::ActOnPragmaPack(PragmaPackKind Kind, IdentifierInfo *Name,
   }
 }
 
-void Sema::ActOnPragmaMSStruct(PragmaMSStructKind Kind) { 
+void Sema::ActOnPragmaMSStruct(PragmaMSStructKind Kind) {
   MSStructPragmaOn = (Kind == PMSST_ON);
 }
 
@@ -369,7 +370,7 @@ void Sema::ActOnPragmaFPContract(tok::OnOffSwitch OOS) {
     FPFeatures.fp_contract = 1;
     break;
   case tok::OOS_OFF:
-    FPFeatures.fp_contract = 0; 
+    FPFeatures.fp_contract = 0;
     break;
   case tok::OOS_DEFAULT:
     FPFeatures.fp_contract = getLangOpts().DefaultFPContract;
@@ -417,4 +418,14 @@ void Sema::PopPragmaVisibility(bool IsNamespaceEnd, SourceLocation EndLoc) {
   // To simplify the implementation, never keep around an empty stack.
   if (Stack->empty())
     FreeVisContext();
+}
+
+void Sema::ActOnPragmaPACOCombine(Sema::PragmaPACOCombineMode Mode)
+{
+    PACOCombineMode = Mode;
+}
+
+void Sema::ActOnPragmaPACOIntermediateLiteral(Sema::PragmaPACOIntermediateLiteralMode Mode)
+{
+    PACOIntermediateLiteralMode = Mode;
 }

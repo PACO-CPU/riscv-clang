@@ -305,10 +305,24 @@ Retry:
   case tok::annot_pragma_captured:
     return HandlePragmaCaptured();
 
-  case tok::annot_pragma_openmp:
+  case tok::annot_pragma_openmp: {
     SourceLocation DeclStart = Tok.getLocation();
     DeclGroupPtrTy Res = ParseOpenMPDeclarativeDirective();
     return Actions.ActOnDeclStmt(Res, DeclStart, Tok.getLocation());
+  }
+
+  case tok::annot_pragma_paco_combine: {
+    ProhibitAttributes(Attrs);
+    HandlePragmaCombine();
+    return StmtEmpty();
+  }
+
+  case tok::annot_pragma_paco_intermediateliteral: {
+    ProhibitAttributes(Attrs);
+    HandlePragmaIntermediateLiteral();
+    return StmtEmpty();
+  }
+
   }
 
   // If we reached this code, the statement must end in a semicolon.
@@ -761,6 +775,11 @@ void Parser::ParseCompoundStatementLeadingPragmas() {
     case tok::annot_pragma_fp_contract:
       HandlePragmaFPContract();
       break;
+    case tok::annot_pragma_paco_combine:
+      HandlePragmaCombine();
+      break;
+    case tok::annot_pragma_paco_intermediateliteral:
+      HandlePragmaIntermediateLiteral();
     default:
       checkForPragmas = false;
       break;
@@ -1874,7 +1893,7 @@ ExprResult Parser::ParseMSAsmIdentifier(llvm::SmallVectorImpl<Token> &LineToks,
 
     NumLineToksConsumed = LineIndex;
   }
-      
+
   // Finally, restore the old parsing state by consuming all the
   // tokens we staged before, implicitly killing off the
   // token-lexer we pushed.
@@ -2071,7 +2090,7 @@ StmtResult Parser::ParseMicrosoftAsmStatement(SourceLocation AsmLoc) {
                           ArchTy != llvm::Triple::x86_64);
   if (UnsupportedArch)
     Diag(AsmLoc, diag::err_msasm_unsupported_arch) << TheTriple.getArchName();
-    
+
   // If we don't support assembly, or the assembly is empty, we don't
   // need to instantiate the AsmParser, etc.
   if (UnsupportedArch || AsmToks.empty()) {
@@ -2112,7 +2131,7 @@ StmtResult Parser::ParseMicrosoftAsmStatement(SourceLocation AsmLoc) {
     TargetParser(TheTarget->createMCAsmParser(*STI, *Parser));
 
   // Get the instruction descriptor.
-  const llvm::MCInstrInfo *MII = TheTarget->createMCInstrInfo(); 
+  const llvm::MCInstrInfo *MII = TheTarget->createMCInstrInfo();
   llvm::MCInstPrinter *IP =
     TheTarget->createMCInstPrinter(1, *MAI, *MII, *MRI, *STI);
 

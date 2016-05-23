@@ -151,6 +151,26 @@ StmtResult Parser::HandlePragmaCaptured()
   return Actions.ActOnCapturedRegionEnd(R.get());
 }
 
+void Parser::HandlePragmaCombine()
+{
+  assert(Tok.is(tok::annot_pragma_paco_combine));
+  Sema::PragmaPACOCombineMode Mode =
+    static_cast<Sema::PragmaPACOCombineMode>(
+    reinterpret_cast<uintptr_t>(Tok.getAnnotationValue()));
+  Actions.ActOnPragmaPACOCombine(Mode);
+  ConsumeToken(); // The annotation token.
+}
+
+void Parser::HandlePragmaIntermediateLiteral()
+{
+  assert(Tok.is(tok::annot_pragma_paco_intermediateliteral));
+  Sema::PragmaPACOIntermediateLiteralMode Mode =
+    static_cast<Sema::PragmaPACOIntermediateLiteralMode>(
+    reinterpret_cast<uintptr_t>(Tok.getAnnotationValue()));
+  Actions.ActOnPragmaPACOIntermediateLiteral(Mode);
+  ConsumeToken(); // The annotation token.
+}
+
 namespace {
   typedef llvm::PointerIntPair<IdentifierInfo *, 1, bool> OpenCLExtData;
 }
@@ -185,7 +205,7 @@ void Parser::HandlePragmaOpenCLExtension() {
 // #pragma GCC visibility comes in two variants:
 //   'push' '(' [visibility] ')'
 //   'pop'
-void PragmaGCCVisibilityHandler::HandlePragma(Preprocessor &PP, 
+void PragmaGCCVisibilityHandler::HandlePragma(Preprocessor &PP,
                                               PragmaIntroducerKind Introducer,
                                               Token &VisTok) {
   SourceLocation VisLoc = VisTok.getLocation();
@@ -244,7 +264,7 @@ void PragmaGCCVisibilityHandler::HandlePragma(Preprocessor &PP,
 //   pack '(' [integer] ')'
 //   pack '(' 'show' ')'
 //   pack '(' ('push' | 'pop') [',' identifier] [, integer] ')'
-void PragmaPackHandler::HandlePragma(Preprocessor &PP, 
+void PragmaPackHandler::HandlePragma(Preprocessor &PP,
                                      PragmaIntroducerKind Introducer,
                                      Token &PackTok) {
   SourceLocation PackLoc = PackTok.getLocation();
@@ -336,7 +356,7 @@ void PragmaPackHandler::HandlePragma(Preprocessor &PP,
     return;
   }
 
-  PragmaPackInfo *Info = 
+  PragmaPackInfo *Info =
     (PragmaPackInfo*) PP.getPreprocessorAllocator().Allocate(
       sizeof(PragmaPackInfo), llvm::alignOf<PragmaPackInfo>());
   new (Info) PragmaPackInfo();
@@ -346,7 +366,7 @@ void PragmaPackHandler::HandlePragma(Preprocessor &PP,
   Info->LParenLoc = LParenLoc;
   Info->RParenLoc = RParenLoc;
 
-  Token *Toks = 
+  Token *Toks =
     (Token*) PP.getPreprocessorAllocator().Allocate(
       sizeof(Token) * 1, llvm::alignOf<Token>());
   new (Toks) Token();
@@ -360,11 +380,11 @@ void PragmaPackHandler::HandlePragma(Preprocessor &PP,
 
 // #pragma ms_struct on
 // #pragma ms_struct off
-void PragmaMSStructHandler::HandlePragma(Preprocessor &PP, 
+void PragmaMSStructHandler::HandlePragma(Preprocessor &PP,
                                          PragmaIntroducerKind Introducer,
                                          Token &MSStructTok) {
   Sema::PragmaMSStructKind Kind = Sema::PMSST_OFF;
-  
+
   Token Tok;
   PP.Lex(Tok);
   if (Tok.isNot(tok::identifier)) {
@@ -382,7 +402,7 @@ void PragmaMSStructHandler::HandlePragma(Preprocessor &PP,
     PP.Diag(Tok.getLocation(), diag::warn_pragma_ms_struct);
     return;
   }
-  
+
   if (Tok.isNot(tok::eod)) {
     PP.Diag(Tok.getLocation(), diag::warn_pragma_extra_tokens_at_eol)
       << "ms_struct";
@@ -471,20 +491,20 @@ static void ParseAlignPragma(Preprocessor &PP, Token &FirstTok,
                       /*OwnsTokens=*/false);
 }
 
-void PragmaAlignHandler::HandlePragma(Preprocessor &PP, 
+void PragmaAlignHandler::HandlePragma(Preprocessor &PP,
                                       PragmaIntroducerKind Introducer,
                                       Token &AlignTok) {
   ParseAlignPragma(PP, AlignTok, /*IsOptions=*/false);
 }
 
-void PragmaOptionsHandler::HandlePragma(Preprocessor &PP, 
+void PragmaOptionsHandler::HandlePragma(Preprocessor &PP,
                                         PragmaIntroducerKind Introducer,
                                         Token &OptionsTok) {
   ParseAlignPragma(PP, OptionsTok, /*IsOptions=*/true);
 }
 
 // #pragma unused(identifier)
-void PragmaUnusedHandler::HandlePragma(Preprocessor &PP, 
+void PragmaUnusedHandler::HandlePragma(Preprocessor &PP,
                                        PragmaIntroducerKind Introducer,
                                        Token &UnusedTok) {
   // FIXME: Should we be expanding macros here? My guess is no.
@@ -550,7 +570,7 @@ void PragmaUnusedHandler::HandlePragma(Preprocessor &PP,
   // This allows us to cache a "#pragma unused" that occurs inside an inline
   // C++ member function.
 
-  Token *Toks = 
+  Token *Toks =
     (Token*) PP.getPreprocessorAllocator().Allocate(
       sizeof(Token) * 2 * Identifiers.size(), llvm::alignOf<Token>());
   for (unsigned i=0; i != Identifiers.size(); i++) {
@@ -566,7 +586,7 @@ void PragmaUnusedHandler::HandlePragma(Preprocessor &PP,
 
 // #pragma weak identifier
 // #pragma weak identifier '=' identifier
-void PragmaWeakHandler::HandlePragma(Preprocessor &PP, 
+void PragmaWeakHandler::HandlePragma(Preprocessor &PP,
                                      PragmaIntroducerKind Introducer,
                                      Token &WeakTok) {
   SourceLocation WeakLoc = WeakTok.getLocation();
@@ -601,7 +621,7 @@ void PragmaWeakHandler::HandlePragma(Preprocessor &PP,
   }
 
   if (HasAlias) {
-    Token *Toks = 
+    Token *Toks =
       (Token*) PP.getPreprocessorAllocator().Allocate(
         sizeof(Token) * 3, llvm::alignOf<Token>());
     Token &pragmaUnusedTok = Toks[0];
@@ -613,7 +633,7 @@ void PragmaWeakHandler::HandlePragma(Preprocessor &PP,
     PP.EnterTokenStream(Toks, 3,
                         /*DisableMacroExpansion=*/true, /*OwnsTokens=*/false);
   } else {
-    Token *Toks = 
+    Token *Toks =
       (Token*) PP.getPreprocessorAllocator().Allocate(
         sizeof(Token) * 2, llvm::alignOf<Token>());
     Token &pragmaUnusedTok = Toks[0];
@@ -627,7 +647,7 @@ void PragmaWeakHandler::HandlePragma(Preprocessor &PP,
 }
 
 // #pragma redefine_extname identifier identifier
-void PragmaRedefineExtnameHandler::HandlePragma(Preprocessor &PP, 
+void PragmaRedefineExtnameHandler::HandlePragma(Preprocessor &PP,
                                                PragmaIntroducerKind Introducer,
                                                 Token &RedefToken) {
   SourceLocation RedefLoc = RedefToken.getLocation();
@@ -658,7 +678,7 @@ void PragmaRedefineExtnameHandler::HandlePragma(Preprocessor &PP,
     return;
   }
 
-  Token *Toks = 
+  Token *Toks =
     (Token*) PP.getPreprocessorAllocator().Allocate(
       sizeof(Token) * 3, llvm::alignOf<Token>());
   Token &pragmaRedefTok = Toks[0];
@@ -673,7 +693,7 @@ void PragmaRedefineExtnameHandler::HandlePragma(Preprocessor &PP,
 
 
 void
-PragmaFPContractHandler::HandlePragma(Preprocessor &PP, 
+PragmaFPContractHandler::HandlePragma(Preprocessor &PP,
                                       PragmaIntroducerKind Introducer,
                                       Token &Tok) {
   tok::OnOffSwitch OOS;
@@ -693,8 +713,8 @@ PragmaFPContractHandler::HandlePragma(Preprocessor &PP,
                       /*OwnsTokens=*/false);
 }
 
-void 
-PragmaOpenCLExtensionHandler::HandlePragma(Preprocessor &PP, 
+void
+PragmaOpenCLExtensionHandler::HandlePragma(Preprocessor &PP,
                                            PragmaIntroducerKind Introducer,
                                            Token &Tok) {
   PP.LexUnexpandedToken(Tok);
@@ -857,4 +877,107 @@ void PragmaCommentHandler::HandlePragma(Preprocessor &PP,
   // If the pragma is lexically sound, notify any interested PPCallbacks.
   if (PP.getPPCallbacks())
     PP.getPPCallbacks()->PragmaComment(CommentLoc, II, ArgumentString);
+}
+
+/// \brief Handle the PACO \#pragma combine extension.
+///
+/// The syntax is:
+/// \code
+///   #pragma combine {mode}
+/// \endcode
+/// mode is eather 'least-precise' or 'most-precise'
+void PragmaPACOCombineHandler::HandlePragma(Preprocessor &PP,
+                                        PragmaIntroducerKind Introducer,
+                                        Token &PACOCombineTok) {
+  SourceLocation CombineLoc = PACOCombineTok.getLocation();
+
+  Sema::PragmaPACOCombineMode Mode = Sema::PPACOCM_Error;
+  // Lex the mode
+  Token Tok;
+  PP.Lex(Tok);
+  if (Tok.isNot(tok::identifier)) {
+    PP.Diag(CombineLoc, diag::err_pragma_combine_malformed);
+    return;
+  }
+  // Set the mode
+  const IdentifierInfo *II = Tok.getIdentifierInfo();
+  if (II->isStr("least-precise"))
+    Mode = Sema::PPACOCM_LeastPrecise;
+  else if (II->isStr("most-precise"))
+    Mode = Sema::PPACOCM_MostPrecise;
+  else {
+    PP.Diag(Tok.getLocation(), diag::err_pragma_combine_option_not_set);
+    return;
+  }
+
+  PP.Lex(Tok);
+
+  if (Tok.isNot(tok::eod)) {
+    PP.Diag(Tok.getLocation(), diag::err_pragma_combine_malformed);
+    return;
+  }
+  // Add Token to TokenStream
+  Token *Toks =
+    (Token*) PP.getPreprocessorAllocator().Allocate(
+      sizeof(Token) * 1, llvm::alignOf<Token>());
+  new (Toks) Token();
+  Toks[0].startToken();
+  Toks[0].setKind(tok::annot_pragma_paco_combine);
+  Toks[0].setLocation(PACOCombineTok.getLocation());
+  Toks[0].setAnnotationValue(reinterpret_cast<void*>(
+                             static_cast<uintptr_t>(Mode)));
+  PP.EnterTokenStream(Toks, 1, /*DisableMacroExpansion=*/true,
+                      /*OwnsTokens=*/false);
+}
+
+/// \brief Handle the PACO \#pragma intermediateliteral extension.
+///
+/// The syntax is:
+/// \code
+///   #pragma intermediate-iteral {mode}
+/// \endcode
+/// mode is eather precise or mimic
+void PragmaPACOIntermediateLiteralHandler::HandlePragma(Preprocessor &PP,
+                                        PragmaIntroducerKind Introducer,
+                                        Token &IntermediateLiteralTok) {
+  SourceLocation IntermediateLiteralLoc = IntermediateLiteralTok.getLocation();
+
+  Sema::PragmaPACOIntermediateLiteralMode Mode = Sema::PPACOILM_Error;
+  // Lex the mode
+  Token Tok;
+  PP.Lex(Tok);
+  if (Tok.isNot(tok::identifier)) {
+    PP.Diag(IntermediateLiteralLoc,
+            diag::err_pragma_intermediateliteral_malformed);
+    return;
+  }
+  // Set the mode
+  const IdentifierInfo *II = Tok.getIdentifierInfo();
+  if (II->isStr("precise"))
+    Mode = Sema::PPACOILM_Precise;
+  else if (II->isStr("mimic"))
+    Mode = Sema::PPACOILM_Mimic;
+  else {
+    PP.Diag(Tok.getLocation(), diag::err_pragma_intermediateliteral_option_not_set);
+    return;
+  }
+
+  PP.Lex(Tok);
+
+  if (Tok.isNot(tok::eod)) {
+    PP.Diag(Tok.getLocation(), diag::err_pragma_intermediateliteral_malformed);
+    return;
+  }
+  // Add Token to TokenStream
+  Token *Toks =
+    (Token*) PP.getPreprocessorAllocator().Allocate(
+      sizeof(Token) * 1, llvm::alignOf<Token>());
+  new (Toks) Token();
+  Toks[0].startToken();
+  Toks[0].setKind(tok::annot_pragma_paco_intermediateliteral);
+  Toks[0].setLocation(IntermediateLiteralTok.getLocation());
+  Toks[0].setAnnotationValue(reinterpret_cast<void*>(
+                             static_cast<uintptr_t>(Mode)));
+  PP.EnterTokenStream(Toks, 1, /*DisableMacroExpansion=*/true,
+                      /*OwnsTokens=*/false);
 }

@@ -51,11 +51,11 @@ public:
   virtual void HandlePragma(Preprocessor &PP, PragmaIntroducerKind Introducer,
                             Token &FirstToken);
 };
-  
+
 class PragmaMSStructHandler : public PragmaHandler {
 public:
   explicit PragmaMSStructHandler() : PragmaHandler("ms_struct") {}
-    
+
   virtual void HandlePragma(Preprocessor &PP, PragmaIntroducerKind Introducer,
                             Token &FirstToken);
 };
@@ -90,7 +90,7 @@ public:
   virtual void HandlePragma(Preprocessor &PP, PragmaIntroducerKind Introducer,
                             Token &FirstToken);
 };
-  
+
 
 class PragmaFPContractHandler : public PragmaHandler {
 public:
@@ -117,6 +117,22 @@ public:
 class PragmaCommentHandler : public PragmaHandler {
 public:
   PragmaCommentHandler() : PragmaHandler("comment") {}
+  virtual void HandlePragma(Preprocessor &PP, PragmaIntroducerKind Introducer,
+                            Token &FirstToken);
+};
+
+/// PragmaPACOCombineHandler - "\#pragma paco combine {mode}".
+class PragmaPACOCombineHandler : public PragmaHandler {
+public:
+  PragmaPACOCombineHandler() : PragmaHandler("paco combine") {}
+  virtual void HandlePragma(Preprocessor &PP, PragmaIntroducerKind Introducer,
+                            Token &FirstToken);
+};
+
+/// PragmaPACOIntermediateLiteralHandler - "\#pragma paco intermediateliteral {mode}".
+class PragmaPACOIntermediateLiteralHandler : public PragmaHandler {
+public:
+  PragmaPACOIntermediateLiteralHandler() : PragmaHandler("paco intermediateliteral") {}
   virtual void HandlePragma(Preprocessor &PP, PragmaIntroducerKind Introducer,
                             Token &FirstToken);
 };

@@ -661,8 +661,9 @@ ANNOTATION(pragma_opencl_extension)
 ANNOTATION(pragma_openmp)
 ANNOTATION(pragma_openmp_end)
 
-
-
+// Annotations for PACO pragmas
+ANNOTATION(pragma_paco_combine)
+ANNOTATION(pragma_paco_intermediateliteral)
 
 //===----------------------------------------------------------------------===//
 // PACO keywords.
