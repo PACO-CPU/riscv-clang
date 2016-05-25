@@ -317,7 +317,7 @@ Retry:
     return StmtEmpty();
   }
 
-  case tok::annot_pragma_paco_intermediateliteral: {
+  case tok::annot_pragma_paco_intermediate_literal: {
     ProhibitAttributes(Attrs);
     HandlePragmaIntermediateLiteral();
     return StmtEmpty();
@@ -778,7 +778,7 @@ void Parser::ParseCompoundStatementLeadingPragmas() {
     case tok::annot_pragma_paco_combine:
       HandlePragmaCombine();
       break;
-    case tok::annot_pragma_paco_intermediateliteral:
+    case tok::annot_pragma_paco_intermediate_literal:
       HandlePragmaIntermediateLiteral();
     default:
       checkForPragmas = false;

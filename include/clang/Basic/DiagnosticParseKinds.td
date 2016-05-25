@@ -831,14 +831,18 @@ def err_omp_unexpected_directive : Error <
 def err_expected_approx_kv_data : Error<
   "Expected approx key-value data: String or numeric literal">;
   //TODO: add the error messages here
+def err_pragma_paco_malformed : Error<
+  "pragma paco requires the identifier 'combine' or 'intermediate_literal' after the identifier paco">;
+def err_pragma_paco_option_not_set : Error<
+  "invalid paco option in '#pragma paco' or option not set - please use 'combine' or 'intermediate_literal'">;
 def err_pragma_combine_malformed : Error<
-  "pragma paco combine requires the identifier 'paco', 'combine' and a combine mode such as 'most-precise' or 'least-precise'">;
+  "pragma paco combine requires the identifier 'paco', 'combine' and a combine mode such as 'most_precise' or 'least_precise'">;
 def err_pragma_combine_option_not_set : Error<
-  "invalid paco combine option in '#pragma paco combine' or option not set - please use 'most-precise' or 'least-precise'">;
-def err_pragma_intermediateliteral_malformed : Error<
-  "pragma paco intermediateliteral requires the identifier 'paco', 'intermediateliteral' and an intermediateliteral mode such as 'most-precise' or 'least-precise'">;
-def err_pragma_intermediateliteral_option_not_set : Error<
-  "invalid paco intermediateliteral option in '#pragma paco intermediateliteral' or option not set - please use 'most-precise' or 'least-precise'">;
+  "invalid paco combine option in '#pragma paco combine' or option not set - please use 'most_precise' or 'least_precise'">;
+def err_pragma_intermediate_literal_malformed : Error<
+  "pragma paco intermediate_literal requires the identifier 'paco', 'intermediate_literal' and an intermediate_literal mode such as 'precise' or 'mimic'">;
+def err_pragma_intermediate_literal_option_not_set : Error<
+  "invalid paco intermediate_literal option in '#pragma paco intermediate_literal' or option not set - please use 'precise' or 'mimic'">;
 
 } // end of Parse Issue category.
 

@@ -121,18 +121,10 @@ public:
                             Token &FirstToken);
 };
 
-/// PragmaPACOCombineHandler - "\#pragma paco combine {mode}".
-class PragmaPACOCombineHandler : public PragmaHandler {
+/// PragmaPACOCombineHandler - "\#pragma paco
+class PragmaPACOHandler : public PragmaHandler {
 public:
-  PragmaPACOCombineHandler() : PragmaHandler("paco combine") {}
-  virtual void HandlePragma(Preprocessor &PP, PragmaIntroducerKind Introducer,
-                            Token &FirstToken);
-};
-
-/// PragmaPACOIntermediateLiteralHandler - "\#pragma paco intermediateliteral {mode}".
-class PragmaPACOIntermediateLiteralHandler : public PragmaHandler {
-public:
-  PragmaPACOIntermediateLiteralHandler() : PragmaHandler("paco intermediateliteral") {}
+  PragmaPACOHandler() : PragmaHandler("paco") {}
   virtual void HandlePragma(Preprocessor &PP, PragmaIntroducerKind Introducer,
                             Token &FirstToken);
 };

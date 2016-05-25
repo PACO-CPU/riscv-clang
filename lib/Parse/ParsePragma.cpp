@@ -17,6 +17,7 @@
 #include "clang/Parse/Parser.h"
 #include "clang/Sema/Scope.h"
 #include "llvm/ADT/StringSwitch.h"
+#include "stdio.h"
 using namespace clang;
 
 /// \brief Handle the annotation token produced for #pragma unused(...)
@@ -163,7 +164,7 @@ void Parser::HandlePragmaCombine()
 
 void Parser::HandlePragmaIntermediateLiteral()
 {
-  assert(Tok.is(tok::annot_pragma_paco_intermediateliteral));
+  assert(Tok.is(tok::annot_pragma_paco_intermediate_literal));
   Sema::PragmaPACOIntermediateLiteralMode Mode =
     static_cast<Sema::PragmaPACOIntermediateLiteralMode>(
     reinterpret_cast<uintptr_t>(Tok.getAnnotationValue()));
@@ -883,14 +884,13 @@ void PragmaCommentHandler::HandlePragma(Preprocessor &PP,
 ///
 /// The syntax is:
 /// \code
-///   #pragma combine {mode}
+///   #pragma paco combine {mode}
 /// \endcode
-/// mode is eather 'least-precise' or 'most-precise'
-void PragmaPACOCombineHandler::HandlePragma(Preprocessor &PP,
+/// mode is eather 'least_precise' or 'most_precise'
+static void ParsePragmaPACOCombine(Preprocessor &PP,
                                         PragmaIntroducerKind Introducer,
                                         Token &PACOCombineTok) {
   SourceLocation CombineLoc = PACOCombineTok.getLocation();
-
   Sema::PragmaPACOCombineMode Mode = Sema::PPACOCM_Error;
   // Lex the mode
   Token Tok;
@@ -901,9 +901,9 @@ void PragmaPACOCombineHandler::HandlePragma(Preprocessor &PP,
   }
   // Set the mode
   const IdentifierInfo *II = Tok.getIdentifierInfo();
-  if (II->isStr("least-precise"))
+  if (II->isStr("least_precise"))
     Mode = Sema::PPACOCM_LeastPrecise;
-  else if (II->isStr("most-precise"))
+  else if (II->isStr("most_precise"))
     Mode = Sema::PPACOCM_MostPrecise;
   else {
     PP.Diag(Tok.getLocation(), diag::err_pragma_combine_option_not_set);
@@ -930,14 +930,14 @@ void PragmaPACOCombineHandler::HandlePragma(Preprocessor &PP,
                       /*OwnsTokens=*/false);
 }
 
-/// \brief Handle the PACO \#pragma intermediateliteral extension.
+/// \brief Handle the PACO \#pragma intermediate_literal extension.
 ///
 /// The syntax is:
 /// \code
-///   #pragma intermediate-iteral {mode}
+///   #pragma paco intermediate_literal {mode}
 /// \endcode
 /// mode is eather precise or mimic
-void PragmaPACOIntermediateLiteralHandler::HandlePragma(Preprocessor &PP,
+static void ParsePragmaPACOIntermediateLiteral(Preprocessor &PP,
                                         PragmaIntroducerKind Introducer,
                                         Token &IntermediateLiteralTok) {
   SourceLocation IntermediateLiteralLoc = IntermediateLiteralTok.getLocation();
@@ -948,7 +948,7 @@ void PragmaPACOIntermediateLiteralHandler::HandlePragma(Preprocessor &PP,
   PP.Lex(Tok);
   if (Tok.isNot(tok::identifier)) {
     PP.Diag(IntermediateLiteralLoc,
-            diag::err_pragma_intermediateliteral_malformed);
+            diag::err_pragma_intermediate_literal_malformed);
     return;
   }
   // Set the mode
@@ -958,14 +958,14 @@ void PragmaPACOIntermediateLiteralHandler::HandlePragma(Preprocessor &PP,
   else if (II->isStr("mimic"))
     Mode = Sema::PPACOILM_Mimic;
   else {
-    PP.Diag(Tok.getLocation(), diag::err_pragma_intermediateliteral_option_not_set);
+    PP.Diag(Tok.getLocation(), diag::err_pragma_intermediate_literal_option_not_set);
     return;
   }
 
   PP.Lex(Tok);
 
   if (Tok.isNot(tok::eod)) {
-    PP.Diag(Tok.getLocation(), diag::err_pragma_intermediateliteral_malformed);
+    PP.Diag(Tok.getLocation(), diag::err_pragma_intermediate_literal_malformed);
     return;
   }
   // Add Token to TokenStream
@@ -974,10 +974,40 @@ void PragmaPACOIntermediateLiteralHandler::HandlePragma(Preprocessor &PP,
       sizeof(Token) * 1, llvm::alignOf<Token>());
   new (Toks) Token();
   Toks[0].startToken();
-  Toks[0].setKind(tok::annot_pragma_paco_intermediateliteral);
+  Toks[0].setKind(tok::annot_pragma_paco_intermediate_literal);
   Toks[0].setLocation(IntermediateLiteralTok.getLocation());
   Toks[0].setAnnotationValue(reinterpret_cast<void*>(
                              static_cast<uintptr_t>(Mode)));
   PP.EnterTokenStream(Toks, 1, /*DisableMacroExpansion=*/true,
                       /*OwnsTokens=*/false);
 }
+
+/// \brief Handle the PACO \#pragma combine extension.
+///
+/// The syntax is:
+/// \code
+///   #pragma paco {kind} {mode}
+/// \endcode
+/// kind is eather 'combine' or 'intermediate_literal'
+/// mode depends on the kind
+void PragmaPACOHandler::HandlePragma(Preprocessor &PP,
+                                        PragmaIntroducerKind Introducer,
+                                        Token &PACOTok) {
+  SourceLocation PACOLoc = PACOTok.getLocation();
+  Token Tok;
+  PP.Lex(Tok);
+  if (Tok.isNot(tok::identifier)) {
+    PP.Diag(PACOLoc, diag::err_pragma_paco_malformed);
+    return;
+  }
+  const IdentifierInfo *II = Tok.getIdentifierInfo();
+  if (II->isStr("combine"))
+    ParsePragmaPACOCombine(PP, Introducer, Tok);
+  else if (II->isStr("intermediate_literal"))
+    ParsePragmaPACOIntermediateLiteral(PP, Introducer, Tok);
+  else {
+    PP.Diag(Tok.getLocation(), diag::err_pragma_paco_option_not_set);
+    return;
+  }
+}
+

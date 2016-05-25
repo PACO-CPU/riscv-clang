@@ -150,8 +150,7 @@ class Parser : public CodeCompletionHandler {
   OwningPtr<CommentHandler> CommentSemaHandler;
   OwningPtr<PragmaHandler> OpenMPHandler;
   OwningPtr<PragmaHandler> MSCommentHandler;
-  OwningPtr<PragmaHandler> PACOCombineHandler;
-  OwningPtr<PragmaHandler> PACOIntermediateLiteralHandler;
+  OwningPtr<PragmaHandler> PACOHandler;
 
   /// Whether the '>' token acts as an operator or not. This will be
   /// true except when we are parsing an expression within a C++
@@ -453,7 +452,7 @@ private:
   void HandlePragmaCombine();
 
   /// \brief Handle the annotation token produced for
-  /// #pragma paco intermediateliteral <mode>
+  /// #pragma paco intermediate_literal <mode>
   void HandlePragmaIntermediateLiteral();
 
   /// GetLookAheadToken - This peeks ahead N tokens and returns that token

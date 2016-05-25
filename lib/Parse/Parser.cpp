@@ -11,6 +11,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "stdio.h"
 #include "clang/Parse/Parser.h"
 #include "ParsePragma.h"
 #include "RAIIObjectsForParser.h"
@@ -91,11 +92,8 @@ Parser::Parser(Preprocessor &pp, Sema &actions, bool skipFunctionBodies)
   PP.AddPragmaHandler("STDC", FPContractHandler.get());
 
   if (getLangOpts().PACO) {
-    PACOCombineHandler.reset(new PragmaPACOCombineHandler());
-    PP.AddPragmaHandler(PACOCombineHandler.get());
-
-    PACOIntermediateLiteralHandler.reset(new PragmaPACOIntermediateLiteralHandler());
-    PP.AddPragmaHandler(PACOIntermediateLiteralHandler.get());
+    PACOHandler.reset(new PragmaPACOHandler());
+    PP.AddPragmaHandler(PACOHandler.get());
   }
 
   if (getLangOpts().OpenCL) {
@@ -442,10 +440,8 @@ Parser::~Parser() {
   RedefineExtnameHandler.reset();
 
   if (getLangOpts().PACO) {
-    PP.RemovePragmaHandler(PACOCombineHandler.get());
-    PACOCombineHandler.reset();
-    PP.RemovePragmaHandler(PACOIntermediateLiteralHandler.get());
-    PACOIntermediateLiteralHandler.reset();
+    PP.RemovePragmaHandler(PACOHandler.get());
+    PACOHandler.reset();
   }
 
   if (getLangOpts().OpenCL) {
@@ -662,7 +658,7 @@ Parser::ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
   case tok::annot_pragma_paco_combine:
     HandlePragmaCombine();
     return DeclGroupPtrTy();
-  case tok::annot_pragma_paco_intermediateliteral:
+  case tok::annot_pragma_paco_intermediate_literal:
     HandlePragmaIntermediateLiteral();
     return DeclGroupPtrTy();
   case tok::semi:

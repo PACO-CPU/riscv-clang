@@ -266,7 +266,7 @@ public:
     PPACOCM_Error
   };
 
-  /// Mode for PACO pragma intermediate-literal
+  /// Mode for PACO pragma intermediate_literal
   enum PragmaPACOIntermediateLiteralMode{
     PPACOILM_Precise,
     PPACOILM_Mimic,
@@ -6655,7 +6655,7 @@ public:
   void ActOnPragmaPACOCombine(Sema::PragmaPACOCombineMode Mode);
 
   /// ActOnPragmaPACOIntermediateLiteral - Called on well formed
-  /// \#pragma paco intermediateliteral {mode}
+  /// \#pragma paco intermediate_literal {mode}
   void ActOnPragmaPACOIntermediateLiteral(Sema::PragmaPACOIntermediateLiteralMode Mode);
 
   /// AddAlignmentAttributesForRecord - Adds any needed alignment attributes to
