@@ -1665,6 +1665,7 @@ private:
   bool isDeclarationSpecifier(bool DisambiguatingWithExpression = false);
   bool isTypeSpecifierQualifier();
   bool isTypeQualifier() const;
+  bool isApproxDecorator() const;
 
   /// isKnownToBeTypeSpecifier - Return true if we know that the specified token
   /// is definitely a type-specifier.  Return false if it isn't part of a type
@@ -1684,6 +1685,9 @@ private:
   /// expression statement, when parsing function bodies.
   /// Returns true for declaration, false for expression.
   bool isDeclarationStatement() {
+    if (getLangOpts().PACO && isApproxDecorator()) {
+      return true;
+    }
     if (getLangOpts().CPlusPlus)
       return isCXXDeclarationStatement();
     return isDeclarationSpecifier(true);

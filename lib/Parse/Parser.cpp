@@ -782,16 +782,6 @@ Parser::ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
   case tok::kw___if_not_exists:
     ParseMicrosoftIfExistsExternalDeclaration();
     return DeclGroupPtrTy();
-
-  case tok::kw_approx:
-    // FIXME: this is just for initial testing and should be removed in the
-    // final version
-    {
-      SourceLocation DeclEnd;
-      StmtVector Stmts;
-      return ParseDeclaration(Stmts, Declarator::FileContext, DeclEnd, attrs);
-    }
-
   default:
   dont_know:
     // We can't tell whether this is a function-definition or declaration yet.

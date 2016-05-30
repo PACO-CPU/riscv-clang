@@ -3843,6 +3843,18 @@ bool Parser::isTypeQualifier() const {
   }
 }
 
+/// isApproxDecorator - Return true if the current token could be the start of
+/// an approx decorator.
+bool Parser::isApproxDecorator() const {
+  switch (Tok.getKind()) {
+  default: return false;
+  case tok::kw_approx:
+    return true;
+  }
+}
+
+
+
 /// isKnownToBeTypeSpecifier - Return true if we know that the specified token
 /// is definitely a type-specifier.  Return false if it isn't part of a type
 /// specifier or if we're not sure.
