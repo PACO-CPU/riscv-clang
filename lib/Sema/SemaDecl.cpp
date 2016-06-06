@@ -24,6 +24,7 @@
 #include "clang/AST/EvaluatedExprVisitor.h"
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/StmtCXX.h"
+#include "clang/AST/Decl.h"
 #include "clang/Basic/PartialDiagnostic.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Basic/TargetInfo.h"
@@ -4792,7 +4793,9 @@ Sema::ActOnVariableDeclarator(Scope *S, Declarator &D, DeclContext *DC,
     NewVD = VarDecl::Create(Context, DC, D.getLocStart(),
                             D.getIdentifierLoc(), II,
                             R, TInfo, SC);
-  
+    // PACO 
+    ApproxDecoratorDecl *ad = (D.getDeclSpec().GetApproxDecorator());
+    NewVD->SetApproxDecorator(ad);
     if (D.isInvalidType())
       NewVD->setInvalidDecl();
   } else {
@@ -4861,7 +4864,8 @@ Sema::ActOnVariableDeclarator(Scope *S, Declarator &D, DeclContext *DC,
     NewVD = VarDecl::Create(Context, DC, D.getLocStart(),
                             D.getIdentifierLoc(), II,
                             R, TInfo, SC);
-
+    ApproxDecoratorDecl *ad = (D.getDeclSpec().GetApproxDecorator());
+    NewVD->SetApproxDecorator(ad);
     // If this decl has an auto type in need of deduction, make a note of the
     // Decl so we can diagnose uses of it in its own initializer.
     if (D.getDeclSpec().containsPlaceholderType() && R->getContainedAutoType())

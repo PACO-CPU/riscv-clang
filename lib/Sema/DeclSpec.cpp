@@ -805,8 +805,13 @@ bool DeclSpec::SetApproxDecorator(ApproxDecoratorDecl *approx,
                                   const char *&PrevSpec, unsigned &DiagID) {
   ApproxDecorator = approx;
   ApproxDecoratorLoc = Loc;
-
   return false;
+}
+
+ApproxDecoratorDecl *DeclSpec::GetApproxDecorator() const {
+    
+  return ApproxDecorator;
+
 }
 
 void DeclSpec::setProtocolQualifiers(Decl * const *Protos,

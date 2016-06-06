@@ -652,6 +652,7 @@ public:
 
   bool SetApproxDecorator(ApproxDecoratorDecl *approx, SourceLocation Loc,
                           const char *&PrevSpec, unsigned &DiagID);
+  ApproxDecoratorDecl *GetApproxDecorator() const;
 
   bool isFriendSpecified() const { return Friend_specified; }
   SourceLocation getFriendSpecLoc() const { return FriendLoc; }

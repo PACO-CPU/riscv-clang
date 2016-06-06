@@ -30,6 +30,9 @@
 #include "clang/Sema/TypoCorrection.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/SmallVector.h"
+#include "clang/AST/Decl.h"
+#include <stdio.h>
+#include <iostream>
 using namespace clang;
 
 /// \brief Simple precedence-based parser for binary/ternary operators.
@@ -166,6 +169,15 @@ ExprResult Parser::ParseAssignmentExpression(TypeCastState isTypeCast) {
   ExprResult LHS = ParseCastExpression(/*isUnaryExpression=*/false,
                                        /*isAddressOfOperand=*/false,
                                        isTypeCast);
+  Expr *expr = LHS.take();
+  if (DeclRefExpr *DRE = dyn_cast<DeclRefExpr>(expr->IgnoreParens())) {
+    if (VarDecl *Var = dyn_cast<VarDecl>(DRE->getDecl())) {
+        ApproxDecoratorDecl *ad = Var->GetApproxDecorator();
+        const std::vector<ApproxDecoratorDecl::KeyValue*> values = ad->getKeyValues();
+        printf("sdklöasd");
+       //Var->getDeclSpec(); 
+    }
+  }
   return ParseRHSOfBinaryExpression(LHS, prec::Assignment);
 }
 

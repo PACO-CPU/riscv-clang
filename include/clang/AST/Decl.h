@@ -98,6 +98,79 @@ public:
   }
 };
 
+class ApproxDecoratorDecl : public Decl {
+
+public:
+  class KeyValue {
+    friend class ApproxDecoratorDecl;
+
+  public:
+    
+    enum Kind {
+      String,
+      Numeric
+    };
+  
+  protected:
+    IdentifierInfo *_ident;
+    Kind _kind; 
+
+    StringRef _str;
+    APValue   _num;
+  public:
+    KeyValue(IdentifierInfo *ident, const StringRef &str) : 
+      _ident(ident), _kind(String), _str(str) { }
+    KeyValue(IdentifierInfo *ident, const APValue   &num) : 
+      _ident(ident), _kind(Numeric), _num(num) { }
+    
+    IdentifierInfo *getIdent() const {
+      return _ident;
+    }
+
+    Kind getKind() const {
+      return _kind;
+    }
+
+    StringRef getStr() const {
+      assert(_kind==String && "Not a string KeyValue!");
+      return _str;
+    }
+
+    APValue getNum() const {
+      assert(_kind==Numeric && "Not a numeric KeyValue!");
+      return _num;
+    }
+
+  };
+
+private:
+//  NamedDecl *getUnderlyingDeclImpl();
+//  void verifyLinkage() const;
+
+protected:
+  ApproxDecoratorDecl(DeclContext *DC, SourceLocation StartLoc);
+  std::vector<KeyValue*> _keyvalues;
+
+public:
+  static ApproxDecoratorDecl *Create(ASTContext &C, DeclContext *DC,
+                               SourceLocation StartLoc
+                               );
+
+  static ApproxDecoratorDecl *CreateDeserialized(ASTContext &C, unsigned ID);
+
+  using Decl::isModulePrivate;
+  using Decl::setModulePrivate;
+
+  const std::vector<KeyValue*> &getKeyValues() {
+    return _keyvalues;
+  }
+  
+  void appendKeyValue(KeyValue *kv) {
+    _keyvalues.push_back(kv);
+  }
+  static bool classof(const Decl *D) { return classofKind(D->getKind()); }
+  static bool classofKind(Kind K) { return K == ApproxDecorator; }
+};
 /// NamedDecl - This represents a decl with a name.  Many decls have names such
 /// as ObjCMethodDecl, but not \@class, etc.
 class NamedDecl : public Decl {
@@ -110,12 +183,17 @@ class NamedDecl : public Decl {
 private:
   NamedDecl *getUnderlyingDeclImpl();
   void verifyLinkage() const;
+  ApproxDecoratorDecl *approxDec;
 
 protected:
   NamedDecl(Kind DK, DeclContext *DC, SourceLocation L, DeclarationName N)
     : Decl(DK, DC, L), Name(N) { }
 
 public:
+
+  void SetApproxDecorator (ApproxDecoratorDecl *approx);
+  ApproxDecoratorDecl *GetApproxDecorator();
+
   /// getIdentifier - Get the identifier that names this declaration,
   /// if there is one. This will return NULL if this declaration has
   /// no name (e.g., for an unnamed class) or if the name is a special
@@ -3340,79 +3418,7 @@ public:
 
 /// ApproxDecoratorDecl - This represents an approx decorator for use with 
 /// PACO.
-class ApproxDecoratorDecl : public Decl {
 
-public:
-  class KeyValue {
-    friend class ApproxDecoratorDecl;
-
-  public:
-    
-    enum Kind {
-      String,
-      Numeric
-    };
-  
-  protected:
-    IdentifierInfo *_ident;
-    Kind _kind; 
-
-    StringRef _str;
-    APValue   _num;
-  public:
-    KeyValue(IdentifierInfo *ident, const StringRef &str) : 
-      _ident(ident), _kind(String), _str(str) { }
-    KeyValue(IdentifierInfo *ident, const APValue   &num) : 
-      _ident(ident), _kind(Numeric), _num(num) { }
-    
-    IdentifierInfo *getIdent() const {
-      return _ident;
-    }
-
-    Kind getKind() const {
-      return _kind;
-    }
-
-    StringRef getStr() const {
-      assert(_kind==String && "Not a string KeyValue!");
-      return _str;
-    }
-
-    APValue getNum() const {
-      assert(_kind==Numeric && "Not a numeric KeyValue!");
-      return _num;
-    }
-
-  };
-
-private:
-//  NamedDecl *getUnderlyingDeclImpl();
-//  void verifyLinkage() const;
-
-protected:
-  ApproxDecoratorDecl(DeclContext *DC, SourceLocation StartLoc);
-  std::vector<KeyValue*> _keyvalues;
-
-public:
-  static ApproxDecoratorDecl *Create(ASTContext &C, DeclContext *DC,
-                               SourceLocation StartLoc
-                               );
-
-  static ApproxDecoratorDecl *CreateDeserialized(ASTContext &C, unsigned ID);
-
-  using Decl::isModulePrivate;
-  using Decl::setModulePrivate;
-
-  const std::vector<KeyValue*> &getKeyValues() {
-    return _keyvalues;
-  }
-  
-  void appendKeyValue(KeyValue *kv) {
-    _keyvalues.push_back(kv);
-  }
-  static bool classof(const Decl *D) { return classofKind(D->getKind()); }
-  static bool classofKind(Kind K) { return K == ApproxDecorator; }
-};
 
 
 /// Insertion operator for diagnostics.  This allows sending NamedDecl's

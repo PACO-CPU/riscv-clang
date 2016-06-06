@@ -146,6 +146,7 @@ static bool usesTypeVisibility(const NamedDecl *D) {
          isa<ObjCInterfaceDecl>(D);
 }
 
+
 /// Does the given declaration have member specialization information,
 /// and if so, is it an explicit specialization?
 template <class T> static typename
@@ -179,6 +180,14 @@ static Visibility getVisibilityFromAttr(const T *attr) {
     return ProtectedVisibility;
   }
   llvm_unreachable("bad visibility kind");
+}
+
+void NamedDecl::SetApproxDecorator (ApproxDecoratorDecl *approx) {
+    approxDec = approx;
+}
+
+ApproxDecoratorDecl *NamedDecl::GetApproxDecorator() {
+    return approxDec;
 }
 
 /// Return the explicit visibility of the given declaration.
