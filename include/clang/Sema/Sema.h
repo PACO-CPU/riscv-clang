@@ -206,7 +206,7 @@ class Sema {
   bool isMultiplexExternalSource;
 
   static bool mightHaveNonExternalLinkage(const DeclaratorDecl *FD);
-
+  ApproxDecoratorDecl *getApproxDecl(Expr *expr);
   static bool
   shouldLinkPossiblyHiddenDecl(const NamedDecl *Old, const NamedDecl *New) {
     // We are about to link these. It is now safe to compute the linkage of
@@ -3336,8 +3336,12 @@ public:
   APValue *getNeglectValue(Expr *expr);
   APValue *getInjectValue(Expr *expr);
   APValue *getRelaxValue(Expr *expr);
-  CheckAssignmentForPACO(Expr *LHSExpr, Expr*RHSExpr);
-                                        
+  void CheckAssignmentForPACOAndSetNeglectMask(Expr *LHSExpr, Expr *RHSExpr);
+  bool CheckImmediate(Expr *expr);                                       
+  void SetInjectMaskBottomUp(Expr *expr, Expr *LHSExpr, Expr *RHSExpr);
+  void SetRelaxMaskTopDownAndSetInjectMaskBottomUp(Expr *expr, APValue *relaxMask); 
+  bool ExprIsLeaf(Expr *expr);
+
   ExprResult ActOnBinOp(Scope *S, SourceLocation TokLoc,
                         tok::TokenKind Kind, Expr *LHSExpr, Expr *RHSExpr);
   ExprResult BuildBinOp(Scope *S, SourceLocation OpLoc,

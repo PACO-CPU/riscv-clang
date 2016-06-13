@@ -188,8 +188,10 @@ private:
   ApproxDecoratorDecl *approxDec;
 
 protected:
-  NamedDecl(Kind DK, DeclContext *DC, SourceLocation L, DeclarationName N, approxDec = NULL)
-    : Decl(DK, DC, L), Name(N) { }
+  NamedDecl(Kind DK, DeclContext *DC, SourceLocation L, DeclarationName N)
+    : Decl(DK, DC, L), Name(N) { 
+    approxDec = NULL;
+    }
 
 public:
 

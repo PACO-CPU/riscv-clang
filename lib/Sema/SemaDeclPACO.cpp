@@ -41,38 +41,33 @@
 
 using namespace clang;
 
-CheckApproxKeyVaule(std::vector<ApproxDecoratorDecl::KeyValue*> *keyvalues, ApproxDecoratorDecl::KeyValue *newKey) {
+void CheckApproxKeyVaule(std::vector<ApproxDecoratorDecl::KeyValue*> *keyvalues, ApproxDecoratorDecl::KeyValue *newKey) {
   //TODOPACO: Add a check if keyvalues are valid
-  switch(newKey->getIdent()){
-    case "neglect": {
-      for(size_t i=0;i<keyvalues.size;i++) {
+    StringRef identName = newKey->getIdent()->getName();
+    if (identName.compare("neglect") == 0) {
+      for(size_t i=0;i<keyvalues->size();i++) {
         //TODOPACO: check if neglect already exists, if yes, override it
         //TODOPACO: check if mask and neglect exists in the same decl
-      }
-    }
-    case "mask":{
-      for(size_t i=0;i<keyvalues.size;i++) {
+      } 
+    } else if (identName.compare("mask") == 0) {
+      for(size_t i=0;i<keyvalues->size();i++) {
         //TODOPACO: check if mask already exists, if yes, override it
         //TODOPACO: check if mask and neglect exists in the same decl
       }
-    }
-    case "inject":{
-      for(size_t i=0;i<keyvalues.size;i++) {
+    } else if (identName.compare("inject") == 0) {
+      for(size_t i=0;i<keyvalues->size();i++) {
         //TODOPACO: check if inject already exists, if yes, override it
       }
-    }
-    case "relax":{
+    } else if (identName.compare("relax") == 0) {
       //TODOPACO: check if mask and neglect exists in the same decl
-      for(size_t i=0;i<keyvalues.size;i++) {
+      for(size_t i=0;i<keyvalues->size();i++) {
         //TODOPACO: check if relax already exists, if yes, override it
       }
-    }
-    default: {
+    } else {
       //TODOPACO: Add error message that there is no valid input
     }
-  }
-  
 }
+  
 
 Decl *Sema::ActOnApproxDecorator(
   Scope *S,SourceLocation ApproxLoc,
@@ -83,7 +78,7 @@ Decl *Sema::ActOnApproxDecorator(
   ADec=ApproxDecoratorDecl::Create(Context,CurContext,ApproxLoc);
 
   for(size_t i=0;i<keyvalue_count;i++) {
-    CheckApproxKeyVaule(ADec->getKeyValues(), keyvalues[i])
+    //CheckApproxKeyVaule(ADec->getKeyValues(), keyvalues[i])
     ADec->appendKeyValue(keyvalues[i]);
   }
   return ADec;

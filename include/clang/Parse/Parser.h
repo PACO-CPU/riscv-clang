@@ -174,6 +174,8 @@ class Parser : public CodeCompletionHandler {
   /// The "depth" of the template parameters currently being parsed.
   unsigned TemplateParameterDepth;
 
+  void setExpressionChildsForPACO(Expr* LHS, Expr* oldLHS, Expr* oldRHS);
+
   /// \brief RAII class that manages the template parameter depth.
   class TemplateParameterDepthRAII {
     unsigned &Depth;

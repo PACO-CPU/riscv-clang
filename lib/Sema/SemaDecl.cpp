@@ -4794,7 +4794,7 @@ Sema::ActOnVariableDeclarator(Scope *S, Declarator &D, DeclContext *DC,
                             D.getIdentifierLoc(), II,
                             R, TInfo, SC);
     // PACO 
-    if(getlangOpts().PACO) {
+    if(getLangOpts().PACO) {
       ApproxDecoratorDecl *ad = (D.getDeclSpec().GetApproxDecorator());
       NewVD->SetApproxDecorator(ad);
     }
@@ -4866,33 +4866,33 @@ Sema::ActOnVariableDeclarator(Scope *S, Declarator &D, DeclContext *DC,
     NewVD = VarDecl::Create(Context, DC, D.getLocStart(),
                             D.getIdentifierLoc(), II,
                             R, TInfo, SC);
-    if(getlangOpts().PACO) {
-      ApproxDecoratorDecl *ad = (D.getDeclSpec().GetApproxDecorator());
-      NewVD->SetApproxDecorator(ad);
-    }
-    // If this decl has an auto type in need of deduction, make a note of the
-    // Decl so we can diagnose uses of it in its own initializer.
-    if (D.getDeclSpec().containsPlaceholderType() && R->getContainedAutoType())
-      ParsingInitForAutoVars.insert(NewVD);
+if(getLangOpts().PACO) {
+  ApproxDecoratorDecl *ad = (D.getDeclSpec().GetApproxDecorator());
+  NewVD->SetApproxDecorator(ad);
+}
+// If this decl has an auto type in need of deduction, make a note of the
+// Decl so we can diagnose uses of it in its own initializer.
+if (D.getDeclSpec().containsPlaceholderType() && R->getContainedAutoType())
+  ParsingInitForAutoVars.insert(NewVD);
 
-    if (D.isInvalidType() || Invalid)
-      NewVD->setInvalidDecl();
+if (D.isInvalidType() || Invalid)
+  NewVD->setInvalidDecl();
 
-    SetNestedNameSpecifier(NewVD, D);
+SetNestedNameSpecifier(NewVD, D);
 
-    if (TemplateParamLists.size() > 0 && D.getCXXScopeSpec().isSet()) {
-      NewVD->setTemplateParameterListsInfo(Context,
-                                           TemplateParamLists.size(),
-                                           TemplateParamLists.data());
-    }
+if (TemplateParamLists.size() > 0 && D.getCXXScopeSpec().isSet()) {
+  NewVD->setTemplateParameterListsInfo(Context,
+                                       TemplateParamLists.size(),
+                                       TemplateParamLists.data());
+}
 
-    if (D.getDeclSpec().isConstexprSpecified())
-      NewVD->setConstexpr(true);
-  }
+if (D.getDeclSpec().isConstexprSpecified())
+  NewVD->setConstexpr(true);
+}
 
-  // Set the lexical context. If the declarator has a C++ scope specifier, the
-  // lexical context will be different from the semantic context.
-  NewVD->setLexicalDeclContext(CurContext);
+// Set the lexical context. If the declarator has a C++ scope specifier, the
+// lexical context will be different from the semantic context.
+NewVD->setLexicalDeclContext(CurContext);
 
   if (DeclSpec::TSCS TSCS = D.getDeclSpec().getThreadStorageClassSpec()) {
     if (NewVD->hasLocalStorage())

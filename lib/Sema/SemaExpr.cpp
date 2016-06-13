@@ -41,6 +41,7 @@
 #include "clang/Sema/ScopeInfo.h"
 #include "clang/Sema/SemaFixItUtils.h"
 #include "clang/Sema/Template.h"
+#include <string.h>
 using namespace clang;
 using namespace sema;
 
@@ -8642,26 +8643,34 @@ ApproxDecoratorDecl *Sema::getApproxDecl(Expr *expr) {
     }
   }
   //TODOPACO: Add error handling
+  return NULL;
 }
+
 APValue *Sema::getApproxKeyValue(Expr *expr, char* keyIdent) {
-  APValue ret = -1;
-  ApproxDecoratorDecl ApproxDecl = getApproxDecl(expr);
+  ApproxDecoratorDecl *ApproxDecl = getApproxDecl(expr);
   const std::vector<ApproxDecoratorDecl::KeyValue*> KeyValues = ApproxDecl->getKeyValues();
-  struct getKey
+  APValue *result;
+  struct KeyGetter
   {
+    char *keyIdent;
+    KeyGetter(char *ident) {keyIdent = ident; }
+    APValue ret;
     void operator() (ApproxDecoratorDecl::KeyValue* Key) 
     {
       //TODOPACO: Figure out if this is correct, ask Peter
-      if(Key->getIdent()==keyIdent)
+      if(Key->getIdent()->getName().compare(keyIdent) == 0)
       {
         ret = Key->getNum();
       }
     }
-  }keyGetter;
-  for_each(KeyValues.begin(), KeyValues.end(), keyGetter)
-  if(ret != -1)
-    return ret;
-  else {
+  };
+  
+  KeyGetter keyFun = for_each(KeyValues.begin(), KeyValues.end(), KeyGetter(keyIdent));
+  result = new APValue(keyFun.ret);
+
+  if(result != NULL) {
+    return result;
+  }  else {
     //TODOPACO: Add error handling
   }
 }
@@ -8678,13 +8687,12 @@ APValue *Sema::getRelaxValue(Expr *expr) {
 }
 
 
-Sema::CheckAssignmentForPACOAndSetNeglectMask(Expr *LHSExpr, Expr *RHSExpr) {
-  APValue neglectAssignment;
-  neglectAssignment = -1;
+void Sema::CheckAssignmentForPACOAndSetNeglectMask(Expr *LHSExpr, Expr *RHSExpr) {
+  APValue *neglectAssignment = NULL;
   //TODOPACO: Add if statement to test if LHSExpr contains a neglect mask
-  if(LHSExpr is approx) {
+  if(/* LHSExpr is approx */ 1) {
     neglectAssignment = getNeglectValue(LHSExpr);
-    SetRelaxMaskTopDownAndSetInjectMaskBottomUp(RHSExpr, APValue neglectAssignment);
+    SetRelaxMaskTopDownAndSetInjectMaskBottomUp(RHSExpr, neglectAssignment);
     //TODOPACO: Add check if RHSexpr injectMask is greater than neclectAssignment, if it is, add an error handling
     //TODOPACO: set neglectMask of Expressions depending on injectMask
     //TODOPACO: Think about backpropagation of injectmask
@@ -8694,11 +8702,11 @@ Sema::CheckAssignmentForPACOAndSetNeglectMask(Expr *LHSExpr, Expr *RHSExpr) {
   }
 }
 
-bool Sema::CheckImmeadiate(Expr *expr) {
+bool Sema::CheckImmediate(Expr *expr) {
   //TODOPACO Check if expr is immediate
 }
 
-Sema::SetInjectMaskBottomUp(Expr *expr, Expr *LHSExpr, Expr *RHSExpr){
+void Sema::SetInjectMaskBottomUp(Expr *expr, Expr *LHSExpr, Expr *RHSExpr){
   //if(CheckImmeadiate(LHSExpr))
   //if(CheckImmeadiate(RHSExpr))
   //TODOPACO test if LHS or RHS are immediate and if they are, set the approx decorator of the immediate value 
@@ -8726,17 +8734,18 @@ Sema::SetInjectMaskBottomUp(Expr *expr, Expr *LHSExpr, Expr *RHSExpr){
     }
   }
 }
-Sema::SetRelaxMaskTopDownAndSetInjectMaskBottomUp(Expr *expr, APValue relaxMask) {
+void Sema::SetRelaxMaskTopDownAndSetInjectMaskBottomUp(Expr *expr, APValue *relaxMask) {
   Expr *LHSExpr;
   Expr *RHSExpr;
-  LHSExpr = expr->getLHS();
-  RHSExpr = expr->getRHS();
+  //PACOTODO: Function don't exist
+  //LHSExpr = expr->getLHS();
+  //RHSExpr = expr->getRHS();
   if(ExprIsLeaf(LHSExpr) & ExprIsLeaf(RHSExpr)) {
-    LHSExpr->setRelaxMask(relaxMask);
-    RHSExpr->setRelaxMask(relaxMask);
+    LHSExpr->setRelaxMask(*relaxMask);
+    RHSExpr->setRelaxMask(*relaxMask);
   }
   else {
-    expr->setRelaxMask(relaxMask);
+    expr->setRelaxMask(*relaxMask);
     SetRelaxMaskTopDownAndSetInjectMaskBottomUp(LHSExpr,relaxMask);
     SetRelaxMaskTopDownAndSetInjectMaskBottomUp(RHSExpr, relaxMask);
     SetInjectMaskBottomUp(expr, LHSExpr, RHSExpr);
@@ -8745,8 +8754,9 @@ Sema::SetRelaxMaskTopDownAndSetInjectMaskBottomUp(Expr *expr, APValue relaxMask)
 bool Sema::ExprIsLeaf(Expr *expr) {
   Expr *LHSExpr;
   Expr *RHSExpr;
-  LHSExpr = expr->getLHS();
-  RHSExpr = expr->getRHS();
+  //PACOTODO: Function don't exist
+  //LHSExpr = expr->getLHS();
+  //RHSExpr = expr->getRHS();
   if(LHSExpr==NULL & RHSExpr==NULL)
     return true;
   else
@@ -8789,7 +8799,7 @@ ExprResult Sema::CreateBuiltinBinOp(SourceLocation OpLoc,
   case BO_Assign:
     if(getLangOpts().PACO)
     {
-      CheckAssignmentForPACOAndSetNeglectMask(LHSExpr, RHSExpr)
+      CheckAssignmentForPACOAndSetNeglectMask(LHSExpr, RHSExpr);
     }
     ResultTy = CheckAssignmentOperands(LHS.get(), RHS, OpLoc, QualType());
     if (getLangOpts().CPlusPlus &&
@@ -12647,4 +12657,4 @@ Sema::ActOnObjCBoolLiteral(SourceLocation OpLoc, tok::TokenKind Kind) {
   return Owned(new (Context) ObjCBoolLiteralExpr(Kind == tok::kw___objc_yes,
                                         BoolT, OpLoc));
 }
-bool CheckIfRHMaskFitsLHMask(Expr LHSExpr)
+//bool CheckIfRHMaskFitsLHMask(Expr LHSExpr)
