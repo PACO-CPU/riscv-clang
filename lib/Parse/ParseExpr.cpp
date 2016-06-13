@@ -168,12 +168,6 @@ ExprResult Parser::ParseAssignmentExpression(TypeCastState isTypeCast) {
   ExprResult LHS = ParseCastExpression(/*isUnaryExpression=*/false,
                                        /*isAddressOfOperand=*/false,
                                        isTypeCast);
-  Expr *expr = LHS.take();
-  if(getLangOpts().PACO){
-    //Initialization for buildExpressionTreeForPACO
-    //expr->setLHS(NULL);
-    //expr->setRHS(NULL);
-  }
   return ParseRHSOfBinaryExpression(LHS, prec::Assignment);
 }
 
@@ -224,8 +218,8 @@ bool Parser::isNotExpressionStart() {
 }
 
 void Parser::setExpressionChildsForPACO(Expr* LHS, Expr* oldLHS, Expr* oldRHS) {
-  //LHS->setLHS = oldLHS;
-  //LHS->setRHS = oldRHS;
+  LHS->setPACOLHS(oldLHS);
+  LHS->setPACORHS(oldRHS);
 }
 
 /// \brief Parse a binary expression that starts with \p LHS and has a

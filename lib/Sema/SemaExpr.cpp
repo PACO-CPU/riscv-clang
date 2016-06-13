@@ -8646,24 +8646,26 @@ ApproxDecoratorDecl *Sema::getApproxDecl(Expr *expr) {
   return NULL;
 }
 
+struct KeyGetter
+{
+  char *keyIdent;
+  KeyGetter(char *ident) {keyIdent = ident; }
+  APValue ret;
+  void operator() (ApproxDecoratorDecl::KeyValue* Key) 
+  {
+    //TODOPACO: Figure out if this is correct, ask Peter
+    if(Key->getIdent()->getName().compare(keyIdent) == 0)
+    {
+      ret = Key->getNum();
+    }
+  }
+};
+
 APValue *Sema::getApproxKeyValue(Expr *expr, char* keyIdent) {
   ApproxDecoratorDecl *ApproxDecl = getApproxDecl(expr);
   const std::vector<ApproxDecoratorDecl::KeyValue*> KeyValues = ApproxDecl->getKeyValues();
   APValue *result;
-  struct KeyGetter
-  {
-    char *keyIdent;
-    KeyGetter(char *ident) {keyIdent = ident; }
-    APValue ret;
-    void operator() (ApproxDecoratorDecl::KeyValue* Key) 
-    {
-      //TODOPACO: Figure out if this is correct, ask Peter
-      if(Key->getIdent()->getName().compare(keyIdent) == 0)
-      {
-        ret = Key->getNum();
-      }
-    }
-  };
+
   
   KeyGetter keyFun = for_each(KeyValues.begin(), KeyValues.end(), KeyGetter(keyIdent));
   result = new APValue(keyFun.ret);
@@ -8686,12 +8688,13 @@ APValue *Sema::getRelaxValue(Expr *expr) {
   return getApproxKeyValue(expr, "relax");
 }
 
+//bool Sema::
 
 void Sema::CheckAssignmentForPACOAndSetNeglectMask(Expr *LHSExpr, Expr *RHSExpr) {
-  APValue *neglectAssignment = NULL;
-  //TODOPACO: Add if statement to test if LHSExpr contains a neglect mask
-  if(/* LHSExpr is approx */ 1) {
-    neglectAssignment = getNeglectValue(LHSExpr);
+  APValue *neglectAssignment = getNeglectValue(LHSExpr);
+  APValue *relaxAssignment = getRelaxValue(LHSExpr);
+  //If neglectAssignment exists, so LHSExpr is approx
+  if(neglectAssignment != NULL && relaxAssignment != NULL && relaxAssignment->getInt() != 0) {
     SetRelaxMaskTopDownAndSetInjectMaskBottomUp(RHSExpr, neglectAssignment);
     //TODOPACO: Add check if RHSexpr injectMask is greater than neclectAssignment, if it is, add an error handling
     //TODOPACO: set neglectMask of Expressions depending on injectMask
@@ -8737,9 +8740,8 @@ void Sema::SetInjectMaskBottomUp(Expr *expr, Expr *LHSExpr, Expr *RHSExpr){
 void Sema::SetRelaxMaskTopDownAndSetInjectMaskBottomUp(Expr *expr, APValue *relaxMask) {
   Expr *LHSExpr;
   Expr *RHSExpr;
-  //PACOTODO: Function don't exist
-  //LHSExpr = expr->getLHS();
-  //RHSExpr = expr->getRHS();
+  LHSExpr = expr->getPACOLHS();
+  RHSExpr = expr->getPACORHS();
   if(ExprIsLeaf(LHSExpr) & ExprIsLeaf(RHSExpr)) {
     LHSExpr->setRelaxMask(*relaxMask);
     RHSExpr->setRelaxMask(*relaxMask);
@@ -8754,9 +8756,8 @@ void Sema::SetRelaxMaskTopDownAndSetInjectMaskBottomUp(Expr *expr, APValue *rela
 bool Sema::ExprIsLeaf(Expr *expr) {
   Expr *LHSExpr;
   Expr *RHSExpr;
-  //PACOTODO: Function don't exist
-  //LHSExpr = expr->getLHS();
-  //RHSExpr = expr->getRHS();
+  LHSExpr = expr->getPACOLHS();
+  RHSExpr = expr->getPACORHS();
   if(LHSExpr==NULL & RHSExpr==NULL)
     return true;
   else

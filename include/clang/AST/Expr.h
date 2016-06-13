@@ -102,9 +102,11 @@ struct SubobjectAdjustment {
 ///
 class Expr : public Stmt {
   QualType TR;
-  APValue neglectMask;
-  APValue injectMask;
-  APValue relaxMask;
+  APValue *neglectMask;
+  APValue *injectMask;
+  APValue *relaxMask;
+  Expr *PACOLHS;
+  Expr *PACORHS;
 
 protected:
   Expr(StmtClass SC, QualType T, ExprValueKind VK, ExprObjectKind OK,
@@ -118,6 +120,9 @@ protected:
     ExprBits.ObjectKind = OK;
     ExprBits.ContainsUnexpandedParameterPack = ContainsUnexpandedParameterPack;
     setType(T);
+    //Initialization for buildExpressionTreeForPACO
+    PACOLHS = NULL;
+    PACORHS = NULL;
   }
 
   /// \brief Construct an empty expression.
@@ -139,20 +144,28 @@ public:
     TR = t;
   }
   
-  APValue getNeglectMask() const { return neglectMask; }
-  void setNeglectMask(APValue mask) {
+  APValue *getNeglectMask() { return neglectMask; }
+  void setNeglectMask(APValue *mask) {
     //TODOPACO: add assert if value is not correct
     neglectMask = mask;
   }
-  APValue getInjectMask() const { return neglectMask; }
-  void setInjectMask(APValue mask) {
+  APValue *getInjectMask() { return neglectMask; }
+  void setInjectMask(APValue *mask) {
     //TODOPACO: add assert if value is not correct
     injectMask = mask;
   }
-  APValue getRelaxMask() const { return neglectMask; }
-  void setRelaxMask(APValue mask) {
+  APValue *getRelaxMask() { return neglectMask; }
+  void setRelaxMask(APValue *mask) {
     //TODOPACO: add assert if value is not correct
     relaxMask = mask;
+  }
+  Expr *getPACOLHS() { return PACOLHS; }
+  void setPACOLHS(Expr *expr) {
+    PACOLHS = expr;
+  }
+  Expr *getPACORHS() { return PACORHS; }
+  void setPACORHS(Expr *expr) {
+    PACORHS = expr;
   }
 
   /// isValueDependent - Determines whether this expression is

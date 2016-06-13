@@ -174,8 +174,6 @@ class Parser : public CodeCompletionHandler {
   /// The "depth" of the template parameters currently being parsed.
   unsigned TemplateParameterDepth;
 
-  void setExpressionChildsForPACO(Expr* LHS, Expr* oldLHS, Expr* oldRHS);
-
   /// \brief RAII class that manages the template parameter depth.
   class TemplateParameterDepthRAII {
     unsigned &Depth;
@@ -456,6 +454,8 @@ private:
   /// \brief Handle the annotation token produced for
   /// #pragma paco intermediate_literal <mode>
   void HandlePragmaIntermediateLiteral();
+  
+  void setExpressionChildsForPACO(Expr* LHS, Expr* oldLHS, Expr* oldRHS);
 
   /// GetLookAheadToken - This peeks ahead N tokens and returns that token
   /// without consuming any tokens.  LookAhead(0) returns 'Tok', LookAhead(1)
