@@ -41,31 +41,64 @@
 
 using namespace clang;
 
-void CheckApproxKeyVaule(std::vector<ApproxDecoratorDecl::KeyValue*> *keyvalues, ApproxDecoratorDecl::KeyValue *newKey) {
-  //TODOPACO: Add a check if keyvalues are valid
+bool Sema::CheckApproxKeyVaule(SourceLocation ApproxLoc,
+                         std::vector<ApproxDecoratorDecl::KeyValue*> keyvalues,
+                         ApproxDecoratorDecl::KeyValue *newKey) {
     StringRef identName = newKey->getIdent()->getName();
+
     if (identName.compare("neglect") == 0) {
-      for(size_t i=0;i<keyvalues->size();i++) {
-        //TODOPACO: check if neglect already exists, if yes, override it
-        //TODOPACO: check if mask and neglect exists in the same decl
+      for(size_t i=0;i<keyvalues.size();i++) {
+        StringRef valueName = keyvalues[i]->getIdent()->getName();
+
+        /* Check if neglect already exits */
+        if (valueName.compare("neglect") == 0) {
+            Diag(ApproxLoc, diag::warn_approx_overide);
+            keyvalues[i] = newKey;
+            return false;
+        /* If mask exits in the same approx decl give an error */
+        } else if(valueName.compare("mask") == 0) {
+            Diag(ApproxLoc,diag::err_approx_keyvalue_mask_neglect);
+            return false;
+        }
       } 
     } else if (identName.compare("mask") == 0) {
-      for(size_t i=0;i<keyvalues->size();i++) {
-        //TODOPACO: check if mask already exists, if yes, override it
-        //TODOPACO: check if mask and neglect exists in the same decl
+      for(size_t i=0;i<keyvalues.size();i++) {
+        StringRef valueName = keyvalues[i]->getIdent()->getName();
+
+        /* Check if neglect already exits */
+        if (valueName.compare("neglect") == 0) {
+            Diag(ApproxLoc,diag::err_approx_keyvalue_mask_neglect);
+            return false;
+        /* If mask exits in the same approx decl give an error */
+        } else if(valueName.compare("mask") == 0) {
+            Diag(ApproxLoc, diag::warn_approx_overide);
+            keyvalues[i] = newKey;
+            return false;
+        }
       }
     } else if (identName.compare("inject") == 0) {
-      for(size_t i=0;i<keyvalues->size();i++) {
-        //TODOPACO: check if inject already exists, if yes, override it
+      for(size_t i=0;i<keyvalues.size();i++) {
+        StringRef valueName = keyvalues[i]->getIdent()->getName();
+        if(valueName.compare("inject") == 0) {
+            Diag(ApproxLoc, diag::warn_approx_overide);
+            keyvalues[i] = newKey;
+            return false;
+        }
       }
     } else if (identName.compare("relax") == 0) {
-      //TODOPACO: check if mask and neglect exists in the same decl
-      for(size_t i=0;i<keyvalues->size();i++) {
-        //TODOPACO: check if relax already exists, if yes, override it
+      for(size_t i=0;i<keyvalues.size();i++) {
+        StringRef valueName = keyvalues[i]->getIdent()->getName();
+        if(valueName.compare("inject") == 0) {
+            Diag(ApproxLoc, diag::warn_approx_overide);
+            keyvalues[i] = newKey;
+            return false;
+        }
       }
     } else {
-      //TODOPACO: Add error message that there is no valid input
+      Diag(ApproxLoc,diag::err_approx_keyvalue_not_valid);
+      return false;
     }
+    return true;
 }
   
 
@@ -78,9 +111,10 @@ Decl *Sema::ActOnApproxDecorator(
   ADec=ApproxDecoratorDecl::Create(Context,CurContext,ApproxLoc);
 
   for(size_t i=0;i<keyvalue_count;i++) {
-    //CheckApproxKeyVaule(ADec->getKeyValues(), keyvalues[i])
-    ADec->appendKeyValue(keyvalues[i]);
-  }
+    if (CheckApproxKeyVaule(ApproxLoc, ADec->getKeyValues(), keyvalues[i])) {
+        ADec->appendKeyValue(keyvalues[i]);
+    }
+}
   return ADec;
 }
 
