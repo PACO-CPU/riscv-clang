@@ -3331,7 +3331,13 @@ public:
                                         SourceLocation Loc,
                                         bool GNUSyntax,
                                         ExprResult Init);
-
+  //TODOPACO: Check for correctness when SemaExpr is done
+  APValue *getApproxKeyValue(Expr *expr, char* keyIdent);
+  APValue *getNeglectValue(Expr *expr);
+  APValue *getInjectValue(Expr *expr);
+  APValue *getRelaxValue(Expr *expr);
+  CheckAssignmentForPACO(Expr *LHSExpr, Expr*RHSExpr);
+                                        
   ExprResult ActOnBinOp(Scope *S, SourceLocation TokLoc,
                         tok::TokenKind Kind, Expr *LHSExpr, Expr *RHSExpr);
   ExprResult BuildBinOp(Scope *S, SourceLocation OpLoc,

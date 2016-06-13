@@ -102,6 +102,9 @@ struct SubobjectAdjustment {
 ///
 class Expr : public Stmt {
   QualType TR;
+  APValue neglectMask;
+  APValue injectMask;
+  APValue relaxMask;
 
 protected:
   Expr(StmtClass SC, QualType T, ExprValueKind VK, ExprObjectKind OK,
@@ -134,6 +137,22 @@ public:
            "Expressions can't have reference type");
 
     TR = t;
+  }
+  
+  APValue getNeglectMask() const { return neglectMask; }
+  void setNeglectMask(APValue mask) {
+    //TODOPACO: add assert if value is not correct
+    neglectMask = mask;
+  }
+  APValue getInjectMask() const { return neglectMask; }
+  void setInjectMask(APValue mask) {
+    //TODOPACO: add assert if value is not correct
+    injectMask = mask;
+  }
+  APValue getRelaxMask() const { return neglectMask; }
+  void setRelaxMask(APValue mask) {
+    //TODOPACO: add assert if value is not correct
+    relaxMask = mask;
   }
 
   /// isValueDependent - Determines whether this expression is

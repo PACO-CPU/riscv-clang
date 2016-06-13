@@ -41,6 +41,39 @@
 
 using namespace clang;
 
+CheckApproxKeyVaule(std::vector<ApproxDecoratorDecl::KeyValue*> *keyvalues, ApproxDecoratorDecl::KeyValue *newKey) {
+  //TODOPACO: Add a check if keyvalues are valid
+  switch(newKey->getIdent()){
+    case "neglect": {
+      for(size_t i=0;i<keyvalues.size;i++) {
+        //TODOPACO: check if neglect already exists, if yes, override it
+        //TODOPACO: check if mask and neglect exists in the same decl
+      }
+    }
+    case "mask":{
+      for(size_t i=0;i<keyvalues.size;i++) {
+        //TODOPACO: check if mask already exists, if yes, override it
+        //TODOPACO: check if mask and neglect exists in the same decl
+      }
+    }
+    case "inject":{
+      for(size_t i=0;i<keyvalues.size;i++) {
+        //TODOPACO: check if inject already exists, if yes, override it
+      }
+    }
+    case "relax":{
+      //TODOPACO: check if mask and neglect exists in the same decl
+      for(size_t i=0;i<keyvalues.size;i++) {
+        //TODOPACO: check if relax already exists, if yes, override it
+      }
+    }
+    default: {
+      //TODOPACO: Add error message that there is no valid input
+    }
+  }
+  
+}
+
 Decl *Sema::ActOnApproxDecorator(
   Scope *S,SourceLocation ApproxLoc,
   ApproxDecoratorDecl::KeyValue **keyvalues,
@@ -49,9 +82,10 @@ Decl *Sema::ActOnApproxDecorator(
 
   ADec=ApproxDecoratorDecl::Create(Context,CurContext,ApproxLoc);
 
-  for(size_t i=0;i<keyvalue_count;i++)
+  for(size_t i=0;i<keyvalue_count;i++) {
+    CheckApproxKeyVaule(ADec->getKeyValues(), keyvalues[i])
     ADec->appendKeyValue(keyvalues[i]);
-
+  }
   return ADec;
 }
 

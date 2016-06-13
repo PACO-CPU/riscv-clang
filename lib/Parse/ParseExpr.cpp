@@ -32,7 +32,6 @@
 #include "llvm/ADT/SmallVector.h"
 #include "clang/AST/Decl.h"
 #include <stdio.h>
-#include <iostream>
 using namespace clang;
 
 /// \brief Simple precedence-based parser for binary/ternary operators.
@@ -170,13 +169,10 @@ ExprResult Parser::ParseAssignmentExpression(TypeCastState isTypeCast) {
                                        /*isAddressOfOperand=*/false,
                                        isTypeCast);
   Expr *expr = LHS.take();
-  if (DeclRefExpr *DRE = dyn_cast<DeclRefExpr>(expr->IgnoreParens())) {
-    if (VarDecl *Var = dyn_cast<VarDecl>(DRE->getDecl())) {
-        ApproxDecoratorDecl *ad = Var->GetApproxDecorator();
-        const std::vector<ApproxDecoratorDecl::KeyValue*> values = ad->getKeyValues();
-        printf("sdklöasd");
-       //Var->getDeclSpec(); 
-    }
+  if(getLangOpts().PACO){
+    //Initialization for buildExpressionTreeForPACO
+    expr->setLHS(NULL);
+    expr->setRHS(NULL);
   }
   return ParseRHSOfBinaryExpression(LHS, prec::Assignment);
 }
@@ -225,6 +221,11 @@ bool Parser::isNotExpressionStart() {
     return true;
   // If this is a decl-specifier, we can't be at the start of an expression.
   return isKnownToBeDeclarationSpecifier();
+}
+
+Parser::setExpressionChildsForPACO(Expr* LHS, Expr* oldLHS, Expr* oldRHS) {
+  LHS->setLHS = oldLHS;
+  LHS->setRHS = oldRHS;
 }
 
 /// \brief Parse a binary expression that starts with \p LHS and has a
@@ -333,6 +334,10 @@ Parser::ParseRHSOfBinaryExpression(ExprResult LHS, prec::Level MinPrec) {
     // parse as if we were allowed braced-init-lists everywhere, and check that
     // they only appear on the RHS of assignments later.
     ExprResult RHS;
+    ExprResult oldLHS;
+    ExprResult oldRHS;
+    oldLHS = NULL;
+    oldRHS = NULL;
     bool RHSIsInitList = false;
     if (getLangOpts().CPlusPlus11 && Tok.is(tok::l_brace)) {
       RHS = ParseBraceInitializer();
@@ -369,6 +374,7 @@ Parser::ParseRHSOfBinaryExpression(ExprResult LHS, prec::Level MinPrec) {
       // is okay, to bind exactly as tightly.  For example, compile A=B=C=D as
       // A=(B=(C=D)), where each paren is a level of recursion here.
       // The function takes ownership of the RHS.
+      oldRHS = RHS;
       RHS = ParseRHSOfBinaryExpression(RHS, 
                             static_cast<prec::Level>(ThisPrec + !isRightAssoc));
       RHSIsInitList = false;
@@ -404,9 +410,12 @@ Parser::ParseRHSOfBinaryExpression(ExprResult LHS, prec::Level MinPrec) {
                              diag::warn_cxx0x_right_shift_in_template_arg,
                          SourceRange(Actions.getExprRange(LHS.get()).getBegin(),
                                      Actions.getExprRange(RHS.get()).getEnd()));
-
+        oldLHS = LHS;
         LHS = Actions.ActOnBinOp(getCurScope(), OpToken.getLocation(),
                                  OpToken.getKind(), LHS.take(), RHS.take());
+        if(getLangOpts().PACO){
+          setExpressionChildsForPACO(LHS.take(), oldLHS.take(), oldRHS.take());
+        }
       } else
         LHS = Actions.ActOnConditionalOp(OpToken.getLocation(), ColonLoc,
                                          LHS.take(), TernaryMiddle.take(),

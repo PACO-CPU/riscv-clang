@@ -8635,6 +8635,124 @@ static void checkObjCPointerIntrospection(Sema &S, ExprResult &L, ExprResult &R,
   }
 }
 
+ApproxDecoratorDecl *Sema::getApproxDecl(Expr *expr) {
+  if (DeclRefExpr *DRE = dyn_cast<DeclRefExpr>(expr->IgnoreParens())) {
+    if (VarDecl *Var = dyn_cast<VarDecl>(DRE->getDecl())) {
+      return Var->GetApproxDecorator();
+    }
+  }
+  //TODOPACO: Add error handling
+}
+APValue *Sema::getApproxKeyValue(Expr *expr, char* keyIdent) {
+  APValue ret = -1;
+  ApproxDecoratorDecl ApproxDecl = getApproxDecl(expr);
+  const std::vector<ApproxDecoratorDecl::KeyValue*> KeyValues = ApproxDecl->getKeyValues();
+  struct getKey
+  {
+    void operator() (ApproxDecoratorDecl::KeyValue* Key) 
+    {
+      //TODOPACO: Figure out if this is correct, ask Peter
+      if(Key->getIdent()==keyIdent)
+      {
+        ret = Key->getNum();
+      }
+    }
+  }keyGetter;
+  for_each(KeyValues.begin(), KeyValues.end(), keyGetter)
+  if(ret != -1)
+    return ret;
+  else {
+    //TODOPACO: Add error handling
+  }
+}
+
+APValue *Sema::getNeglectValue(Expr *expr) {
+  //TODOPACO: check designdoc neglect-amount?
+  return getApproxKeyValue(expr, "neglect");
+}
+APValue *Sema::getInjectValue(Expr *expr) {
+  return getApproxKeyValue(expr, "inject");
+}
+APValue *Sema::getRelaxValue(Expr *expr) {
+  return getApproxKeyValue(expr, "relax");
+}
+
+
+Sema::CheckAssignmentForPACOAndSetNeglectMask(Expr *LHSExpr, Expr *RHSExpr) {
+  APValue neglectAssignment;
+  neglectAssignment = -1;
+  //TODOPACO: Add if statement to test if LHSExpr contains a neglect mask
+  if(LHSExpr is approx) {
+    neglectAssignment = getNeglectValue(LHSExpr);
+    SetRelaxMaskTopDownAndSetInjectMaskBottomUp(RHSExpr, APValue neglectAssignment);
+    //TODOPACO: Add check if RHSexpr injectMask is greater than neclectAssignment, if it is, add an error handling
+    //TODOPACO: set neglectMask of Expressions depending on injectMask
+    //TODOPACO: Think about backpropagation of injectmask
+  }
+  else {
+    //TODOPACO: Check if one input of RHS is approx, if yes return an error
+  }
+}
+
+bool Sema::CheckImmeadiate(Expr *expr) {
+  //TODOPACO Check if expr is immediate
+}
+
+Sema::SetInjectMaskBottomUp(Expr *expr, Expr *LHSExpr, Expr *RHSExpr){
+  //if(CheckImmeadiate(LHSExpr))
+  //if(CheckImmeadiate(RHSExpr))
+  //TODOPACO test if LHS or RHS are immediate and if they are, set the approx decorator of the immediate value 
+  switch(PACOIntermediateLiteralMode){
+    case(PPACOILM_Precise): {
+      //Add a approx decl with full precision
+    }
+    case(PPACOILM_Mimic): {
+      //copy the approx decl of the other operator; if both are immediate, add full precision decls to both
+    }
+    case(PPACOILM_Error): {
+      //TODOPACO: add error handling
+    }
+  }
+  //TODOPACO: Compare both variables and assign the injectmask depending on pragma paco comine
+  switch(PACOCombineMode){
+    case(PPACOCM_LeastPrecise): {
+      //TODOPACO: process the expr as approximate as possible
+    }
+    case(PPACOCM_MostPrecise): {
+      //TODOPACO: process the expr as precise as possible
+    }
+    case(PPACOCM_Error): {
+      //TODOPACO: add error handling
+    }
+  }
+}
+Sema::SetRelaxMaskTopDownAndSetInjectMaskBottomUp(Expr *expr, APValue relaxMask) {
+  Expr *LHSExpr;
+  Expr *RHSExpr;
+  LHSExpr = expr->getLHS();
+  RHSExpr = expr->getRHS();
+  if(ExprIsLeaf(LHSExpr) & ExprIsLeaf(RHSExpr)) {
+    LHSExpr->setRelaxMask(relaxMask);
+    RHSExpr->setRelaxMask(relaxMask);
+  }
+  else {
+    expr->setRelaxMask(relaxMask);
+    SetRelaxMaskTopDownAndSetInjectMaskBottomUp(LHSExpr,relaxMask);
+    SetRelaxMaskTopDownAndSetInjectMaskBottomUp(RHSExpr, relaxMask);
+    SetInjectMaskBottomUp(expr, LHSExpr, RHSExpr);
+  }
+}
+bool Sema::ExprIsLeaf(Expr *expr) {
+  Expr *LHSExpr;
+  Expr *RHSExpr;
+  LHSExpr = expr->getLHS();
+  RHSExpr = expr->getRHS();
+  if(LHSExpr==NULL & RHSExpr==NULL)
+    return true;
+  else
+    return false;
+}
+
 /// CreateBuiltinBinOp - Creates a new built-in binary operation with
 /// operator @p Opc at location @c TokLoc. This routine only supports
 /// built-in operations; ActOnBinOp handles overloaded operators.
@@ -8669,6 +8787,10 @@ ExprResult Sema::CreateBuiltinBinOp(SourceLocation OpLoc,
 
   switch (Opc) {
   case BO_Assign:
+    if(getLangOpts().PACO)
+    {
+      CheckAssignmentForPACOAndSetNeglectMask(LHSExpr, RHSExpr)
+    }
     ResultTy = CheckAssignmentOperands(LHS.get(), RHS, OpLoc, QualType());
     if (getLangOpts().CPlusPlus &&
         LHS.get()->getObjectKind() != OK_ObjCProperty) {
@@ -12525,3 +12647,4 @@ Sema::ActOnObjCBoolLiteral(SourceLocation OpLoc, tok::TokenKind Kind) {
   return Owned(new (Context) ObjCBoolLiteralExpr(Kind == tok::kw___objc_yes,
                                         BoolT, OpLoc));
 }
+bool CheckIfRHMaskFitsLHMask(Expr LHSExpr)

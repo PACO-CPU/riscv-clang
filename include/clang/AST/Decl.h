@@ -98,6 +98,8 @@ public:
   }
 };
 
+/// ApproxDecoratorDecl - This represents an approx decorator for use with 
+/// PACO.
 class ApproxDecoratorDecl : public Decl {
 
 public:
@@ -186,7 +188,7 @@ private:
   ApproxDecoratorDecl *approxDec;
 
 protected:
-  NamedDecl(Kind DK, DeclContext *DC, SourceLocation L, DeclarationName N)
+  NamedDecl(Kind DK, DeclContext *DC, SourceLocation L, DeclarationName N, approxDec = NULL)
     : Decl(DK, DC, L), Name(N) { }
 
 public:
@@ -3415,9 +3417,6 @@ public:
   static bool classof(const Decl *D) { return classofKind(D->getKind()); }
   static bool classofKind(Kind K) { return K == Empty; }
 };
-
-/// ApproxDecoratorDecl - This represents an approx decorator for use with 
-/// PACO.
 
 
 
