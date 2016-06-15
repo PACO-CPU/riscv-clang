@@ -269,13 +269,12 @@ public:
   /// Mode for PACO pragma intermediate_literal
   enum PragmaPACOIntermediateLiteralMode{
     PPACOILM_Precise,
-    PPACOILM_Mimic,
-    PPACOILM_Error
+    PPACOILM_Mimic
   };
 
-  PragmaPACOCombineMode PACOCombineMode;
+  static PragmaPACOCombineMode PACOCombineMode = PPACOCM_Error;
 
-  PragmaPACOIntermediateLiteralMode PACOIntermediateLiteralMode;
+  static PragmaPACOIntermediateLiteralMode PACOIntermediateLiteralMode = PPACOILM_Precise;
 
   /// \brief Flag indicating if Sema is building a recovery call expression.
   ///
@@ -3337,9 +3336,10 @@ public:
   APValue *getInjectValue(Expr *expr);
   APValue *getRelaxValue(Expr *expr);
   void CheckAssignmentForPACOAndSetNeglectMask(Expr *LHSExpr, Expr *RHSExpr);
-  bool CheckImmediate(Expr *expr);                                       
+  bool CheckRHSApprox(Expr *expr);
+  bool CheckImmediate(Expr *expr);
   void SetInjectMaskBottomUp(Expr *expr, Expr *LHSExpr, Expr *RHSExpr);
-  void SetRelaxMaskTopDownAndSetInjectMaskBottomUp(Expr *expr, APValue *relaxMask); 
+  void CheckRelaxMaskAndSetInjectMaskBottomUp(Expr *expr, APValue *relaxMask);
   bool ExprIsLeaf(Expr *expr);
 
   ExprResult ActOnBinOp(Scope *S, SourceLocation TokLoc,

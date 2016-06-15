@@ -891,7 +891,6 @@ static void ParsePragmaPACOCombine(Preprocessor &PP,
                                         PragmaIntroducerKind Introducer,
                                         Token &PACOCombineTok) {
   SourceLocation CombineLoc = PACOCombineTok.getLocation();
-  Sema::PragmaPACOCombineMode Mode = Sema::PPACOCM_Error;
   // Lex the mode
   Token Tok;
   PP.Lex(Tok);
@@ -905,6 +904,8 @@ static void ParsePragmaPACOCombine(Preprocessor &PP,
     Mode = Sema::PPACOCM_LeastPrecise;
   else if (II->isStr("most_precise"))
     Mode = Sema::PPACOCM_MostPrecise;
+  else if (II->isStr("error"))
+    Mode = Sema::PPACOCM_Error;
   else {
     PP.Diag(Tok.getLocation(), diag::err_pragma_combine_option_not_set);
     return;
@@ -941,8 +942,6 @@ static void ParsePragmaPACOIntermediateLiteral(Preprocessor &PP,
                                         PragmaIntroducerKind Introducer,
                                         Token &IntermediateLiteralTok) {
   SourceLocation IntermediateLiteralLoc = IntermediateLiteralTok.getLocation();
-
-  Sema::PragmaPACOIntermediateLiteralMode Mode = Sema::PPACOILM_Error;
   // Lex the mode
   Token Tok;
   PP.Lex(Tok);

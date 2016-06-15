@@ -6401,5 +6401,7 @@ def err_approx_data_not_constant : Error<
   "Numeric decorator data must be constant">;
 def err_approx_data_not_num : Error<
   "Numeric decorator data must be (complex) int or float">;
+def err_lhs_cannot_contain_approx_data : Error<
+  "the left hand side can not contain approximated data">;
 
 } // end of sema component.
