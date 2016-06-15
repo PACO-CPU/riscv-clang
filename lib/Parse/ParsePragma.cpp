@@ -891,6 +891,7 @@ static void ParsePragmaPACOCombine(Preprocessor &PP,
                                         PragmaIntroducerKind Introducer,
                                         Token &PACOCombineTok) {
   SourceLocation CombineLoc = PACOCombineTok.getLocation();
+  Sema::PragmaPACOCombineMode Mode;
   // Lex the mode
   Token Tok;
   PP.Lex(Tok);
@@ -900,12 +901,15 @@ static void ParsePragmaPACOCombine(Preprocessor &PP,
   }
   // Set the mode
   const IdentifierInfo *II = Tok.getIdentifierInfo();
-  if (II->isStr("least_precise"))
+  if (II->isStr("least_precise")) {
     Mode = Sema::PPACOCM_LeastPrecise;
-  else if (II->isStr("most_precise"))
-    Mode = Sema::PPACOCM_MostPrecise;
-  else if (II->isStr("error"))
+  }
+  else if (II->isStr("most_precise")) {
+    Mode = Sema::PPACOCM_MostPrecise
+  }
+  else if (II->isStr("error")) {
     Mode = Sema::PPACOCM_Error;
+  }
   else {
     PP.Diag(Tok.getLocation(), diag::err_pragma_combine_option_not_set);
     return;
@@ -942,6 +946,7 @@ static void ParsePragmaPACOIntermediateLiteral(Preprocessor &PP,
                                         PragmaIntroducerKind Introducer,
                                         Token &IntermediateLiteralTok) {
   SourceLocation IntermediateLiteralLoc = IntermediateLiteralTok.getLocation();
+  PragmaPACOIntermediateLiteralMode Mode;
   // Lex the mode
   Token Tok;
   PP.Lex(Tok);
@@ -952,10 +957,12 @@ static void ParsePragmaPACOIntermediateLiteral(Preprocessor &PP,
   }
   // Set the mode
   const IdentifierInfo *II = Tok.getIdentifierInfo();
-  if (II->isStr("precise"))
+  if (II->isStr("precise")) {
     Mode = Sema::PPACOILM_Precise;
-  else if (II->isStr("mimic"))
+  }
+  else if (II->isStr("mimic")) {
     Mode = Sema::PPACOILM_Mimic;
+  }
   else {
     PP.Diag(Tok.getLocation(), diag::err_pragma_intermediate_literal_option_not_set);
     return;

@@ -92,6 +92,8 @@ Sema::Sema(Preprocessor &pp, ASTContext &ctxt, ASTConsumer &consumer,
     CurrentInstantiationScope(0), TyposCorrected(0),
     AnalysisWarnings(*this), CurScope(0), Ident_super(0)
 {
+  PACOCombineMode = PPACOCM_Error;
+  PACOIntermediateLiteralMode = PPACOILM_Precise;
   TUScope = 0;
 
   LoadedExternalKnownNamespaces = false;

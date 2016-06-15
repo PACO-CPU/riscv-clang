@@ -8689,8 +8689,8 @@ APValue *Sema::getRelaxValue(Expr *expr) {
 }
 
 bool Sema::CheckRHSApprox(Expr *expr) {
-  APValue neglectMask = getNeglectValue(expr);
-  APValue injectValue = getInjectValue(expr);
+  APValue* neglectMask = getNeglectValue(expr);
+  APValue* injectValue = getInjectValue(expr);
   if(ExprIsLeaf(expr) && neglectMask!=NULL && neglectMask->getInt()>0 && injectValue != NULL && injectValue->getInt()>0) {
     return true;
   }
@@ -8739,6 +8739,11 @@ void Sema::CheckAssignmentForPACOAndSetNeglectMask(Expr *LHSExpr, Expr *RHSExpr)
 
 bool Sema::CheckImmediate(Expr *expr) {
   //TODOPACO Check if expr is immediate
+  //if(IntegerLiteral* test = dyn_cast<IntegerLiteral>(expr))
+  if(if ([expr class] == [IntegerLiteral class]))
+    return true;
+  else
+    return false;
 }
 
 
@@ -8772,7 +8777,7 @@ void Sema::SetInjectMaskBottomUp(Expr *expr, Expr *LHSExpr, Expr *RHSExpr){
     }
   }
 }
-void Sema::CheckRelaxMaskAndSetInjectMaskBottomUp(Expr *expr, APValue *relaxMask) {
+void Sema::SetRelaxMaskTopDownAndSetInjectMaskBottomUp(Expr *expr, APValue *relaxMask) {
   Expr *LHSExpr;
   Expr *RHSExpr;
   LHSExpr = expr->getPACOLHS();
@@ -8783,7 +8788,7 @@ void Sema::CheckRelaxMaskAndSetInjectMaskBottomUp(Expr *expr, APValue *relaxMask
   }
   else {
     expr->setRelaxMask(relaxMask);
-    SetRelaxMaskTopDownAndSetInjectMaskBottomUp(LHSExpr,relaxMask);
+    SetRelaxMaskTopDownAndSetInjectMaskBottomUp(LHSExpr, relaxMask);
     SetRelaxMaskTopDownAndSetInjectMaskBottomUp(RHSExpr, relaxMask);
     SetInjectMaskBottomUp(expr, LHSExpr, RHSExpr);
   }

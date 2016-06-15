@@ -272,9 +272,9 @@ public:
     PPACOILM_Mimic
   };
 
-  static PragmaPACOCombineMode PACOCombineMode = PPACOCM_Error;
+  PragmaPACOCombineMode PACOCombineMode;
 
-  static PragmaPACOIntermediateLiteralMode PACOIntermediateLiteralMode = PPACOILM_Precise;
+  PragmaPACOIntermediateLiteralMode PACOIntermediateLiteralMode;
 
   /// \brief Flag indicating if Sema is building a recovery call expression.
   ///
