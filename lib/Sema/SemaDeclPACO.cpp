@@ -54,11 +54,11 @@ bool Sema::CheckApproxKeyVaule(SourceLocation ApproxLoc,
         if (valueName.compare("neglect") == 0) {
             Diag(ApproxLoc, diag::warn_approx_overide);
             keyvalues[i] = newKey;
-            return false;
+            return true;
         /* If mask exits in the same approx decl give an error */
         } else if(valueName.compare("mask") == 0) {
             Diag(ApproxLoc,diag::err_approx_keyvalue_mask_neglect);
-            return false;
+            return true;
         }
       } 
     } else if (identName.compare("mask") == 0) {
@@ -68,12 +68,12 @@ bool Sema::CheckApproxKeyVaule(SourceLocation ApproxLoc,
         /* Check if neglect already exits */
         if (valueName.compare("neglect") == 0) {
             Diag(ApproxLoc,diag::err_approx_keyvalue_mask_neglect);
-            return false;
+            return true;
         /* If mask exits in the same approx decl give an error */
         } else if(valueName.compare("mask") == 0) {
             Diag(ApproxLoc, diag::warn_approx_overide);
             keyvalues[i] = newKey;
-            return false;
+            return true;
         }
       }
     } else if (identName.compare("inject") == 0) {
@@ -82,7 +82,7 @@ bool Sema::CheckApproxKeyVaule(SourceLocation ApproxLoc,
         if(valueName.compare("inject") == 0) {
             Diag(ApproxLoc, diag::warn_approx_overide);
             keyvalues[i] = newKey;
-            return false;
+            return true;
         }
       }
     } else if (identName.compare("relax") == 0) {
@@ -91,7 +91,7 @@ bool Sema::CheckApproxKeyVaule(SourceLocation ApproxLoc,
         if(valueName.compare("inject") == 0) {
             Diag(ApproxLoc, diag::warn_approx_overide);
             keyvalues[i] = newKey;
-            return false;
+            return true;
         }
       }
     } else {

@@ -8653,7 +8653,6 @@ struct KeyGetter
   APValue ret;
   void operator() (ApproxDecoratorDecl::KeyValue* Key)
   {
-    //TODOPACO: Figure out if this is correct, ask Peter
     if(Key->getIdent()->getName().compare(keyIdent) == 0)
     {
       ret = Key->getNum();
