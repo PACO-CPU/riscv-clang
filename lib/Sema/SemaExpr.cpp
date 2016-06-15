@@ -8677,8 +8677,7 @@ APValue *Sema::getApproxKeyValue(Expr *expr, const char* keyIdent) {
 }
 
 APValue *Sema::getNeglectValue(Expr *expr) {
-  //TODOPACO: check designdoc neglect-amount?
-  return getApproxKeyValue(expr, "neglect");
+  return getApproxKeyValue(expr, "mask");
 }
 APValue *Sema::getInjectValue(Expr *expr) {
   return getApproxKeyValue(expr, "inject");
@@ -8721,10 +8720,8 @@ void Sema::CheckAssignmentForPACOAndSetNeglectMask(Expr *LHSExpr, Expr *RHSExpr)
   APValue *neglectAssignment = getNeglectValue(LHSExpr);
   APValue *relaxAssignment = getRelaxValue(LHSExpr);
   //If neglectAssignment exists, so LHSExpr is approx
-  if(neglectAssignment != NULL && relaxAssignment != NULL && relaxAssignment->getInt() != 0) {
-    SetRelaxMaskTopDownAndSetInjectMaskBottomUp(RHSExpr, neglectAssignment);
-
-    //TODOPACO: Add check if RHSexpr injectMask is greater than neclectAssignment, if it is, add an error handling
+  if(neglectAssignment != NULL && relaxAssignment != NULL && *(relaxAssignment->getInt().getRawData()) != 0) {
+    SetInjectMaskAndRelaxMaskBottomUp(RHSExpr, neglectAssignment);
     //TODOPACO: set neglectMask of Expressions depending on injectMask
     //TODOPACO: Think about backpropagation of injectmask
   }
@@ -8733,11 +8730,11 @@ void Sema::CheckAssignmentForPACOAndSetNeglectMask(Expr *LHSExpr, Expr *RHSExpr)
     if(CheckRHSApprox(RHSExpr)) {
       Diag(RHSExpr->getExprLoc(), diag::err_lhs_cannot_contain_approx_data);
     }
+    //If both sides are precise, do nothing
   }
 }
 
 bool Sema::CheckImmediate(Expr *expr) {
-  //TODOPACO Check if expr is immediate
   if(IntegerLiteral* test = dyn_cast<IntegerLiteral>(expr))
     return true;
   else
@@ -8747,45 +8744,89 @@ bool Sema::CheckImmediate(Expr *expr) {
 
 //void Sema::RewriteInjectMask
 
-void Sema::SetInjectMaskBottomUp(Expr *expr, Expr *LHSExpr, Expr *RHSExpr){
-  //if(CheckImmeadiate(LHSExpr))
-  //if(CheckImmeadiate(RHSExpr))
-  //TODOPACO test if LHS or RHS are immediate and if they are, set the approx decorator of the immediate value
-  switch(PACOIntermediateLiteralMode){
-    case(Sema::PPACOILM_Precise): {
-      //Add a approx decl with full precision
+void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPValue){
+  uint64_t leftInjectMask, rightInjectMask, injectMask, relaxMask;
+  bool leftIsImmediate, rightIsImmediate;
+  leftIsImmediate = CheckImmediate(LHSExpr);
+  rightIsImmediate = CheckImmediate(RHSExpr);
+  
+  if(ExprIsLeaf(LHSExpr) && ExprIsLeaf(RHSExpr)) {
+    if(leftIsImmediate) {
+      switch(PACOIntermediateLiteralMode){
+        case(Sema::PPACOILM_Precise): {
+          leftInjectMask = 0b1111111; //all precise
+        }
+        case(Sema::PPACOILM_Mimic): {
+          if(!rightIsImmediate) {
+            //left mask mimics right one
+            leftInjectMask = *(getNeglectValue(RHSExpr)->getInt().getRawData());
+          }
+        }
+      }
     }
-    case(Sema::PPACOILM_Mimic): {
-      //copy the approx decl of the other operator; if both are immediate, add full precision decls to both
+    else {
+      leftInjectMask = *(getNeglectValue(LHSExpr)->getInt().getRawData());
+    }
+    if(rightIsImmediate) {
+      switch(PACOIntermediateLiteralMode){
+        case(Sema::PPACOILM_Precise): {
+          rightInjectMask = 0b1111111; //all precise
+        }
+        case(Sema::PPACOILM_Mimic): {
+          if(!leftIsImmediate) {
+            //right mask mimics left one
+            rightInjectMask = *(getNeglectValue(LHSExpr)->getInt().getRawData());
+          }
+        }
+      }
+    }
+    else {
+      rightInjectMask = *(getNeglectValue(RHSExpr)->getInt().getRawData());
     }
   }
-  //TODOPACO: Compare both variables and assign the injectmask depending on pragma paco comine
+  else {
+    //Both are not immediate
+    leftInjectMask = *(LHSExpr->getInjectMask()->getInt().getRawData());
+    rightInjectMask = *(RHSExpr->getInjectMask()->getInt().getRawData());
+  }
+
+  //Compare both variables and assign the injectmask depending on pragma paco comine
   switch(PACOCombineMode){
     case(Sema::PPACOCM_LeastPrecise): {
-      //TODOPACO: process the expr as approximate as possible
+      //process the expr as approximate as possible
+      injectMask = leftInjectMask & rightInjectMask;
     }
     case(Sema::PPACOCM_MostPrecise): {
-      //TODOPACO: process the expr as precise as possible
+      //process the expr as precise as possible
+      injectMask = leftInjectMask | rightInjectMask;
     }
     case(Sema::PPACOCM_Error): {
-      //TODOPACO: add error handling
+      if(leftInjectMask==rightInjectMask) {
+        injectMask = leftInjectMask;
+      }
+      else {
+        //TODOPACO: add error message
+        
+      }
+    }
+    //TODOPACO: Solve APValue creation problem
+    APValue* result;// = injectMask;//*APValue(APInt(7, injectMask);
+    expr->setInjectMask(result);
+    relaxMask = *(relaxAPValue->getInt().getRawData());
+    if(((relaxMask&injectMask)-injectMask)!=0) {
+      //TODOPACO: Ad error handling
     }
   }
 }
-void Sema::SetRelaxMaskTopDownAndSetInjectMaskBottomUp(Expr *expr, APValue *relaxMask) {
+void Sema::SetInjectMaskAndRelaxMaskBottomUp(Expr *expr, APValue *relaxMask) {
   Expr *LHSExpr;
   Expr *RHSExpr;
   LHSExpr = expr->getPACOLHS();
   RHSExpr = expr->getPACORHS();
-  if(ExprIsLeaf(LHSExpr) && ExprIsLeaf(RHSExpr)) {
-    LHSExpr->setRelaxMask(relaxMask);
-    RHSExpr->setRelaxMask(relaxMask);
-  }
-  else {
-    expr->setRelaxMask(relaxMask);
-    SetRelaxMaskTopDownAndSetInjectMaskBottomUp(LHSExpr, relaxMask);
-    SetRelaxMaskTopDownAndSetInjectMaskBottomUp(RHSExpr, relaxMask);
-    SetInjectMaskBottomUp(expr, LHSExpr, RHSExpr);
+  if(!(ExprIsLeaf(LHSExpr) && ExprIsLeaf(RHSExpr))) {
+    SetInjectMaskAndRelaxMaskBottomUp(LHSExpr, relaxMask);
+    SetInjectMaskAndRelaxMaskBottomUp(RHSExpr, relaxMask);
+    SetMasks(expr, LHSExpr, RHSExpr, relaxMask);
   }
 }
 bool Sema::ExprIsLeaf(Expr *expr) {

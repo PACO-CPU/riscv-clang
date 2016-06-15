@@ -3338,8 +3338,8 @@ public:
   void CheckAssignmentForPACOAndSetNeglectMask(Expr *LHSExpr, Expr *RHSExpr);
   bool CheckRHSApprox(Expr *expr);
   bool CheckImmediate(Expr *expr);
-  void SetInjectMaskBottomUp(Expr *expr, Expr *LHSExpr, Expr *RHSExpr);
-  void SetRelaxMaskTopDownAndSetInjectMaskBottomUp(Expr *expr, APValue *relaxMask);
+  void SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxMask);
+  void SetInjectMaskAndRelaxMaskBottomUp(Expr *expr, APValue *relaxMask);
   bool ExprIsLeaf(Expr *expr);
   bool CheckApproxKeyVaule(SourceLocation ApproxLoc,
                                  std::vector<ApproxDecoratorDecl::KeyValue*> keyvalues, 

@@ -47,6 +47,7 @@ bool Sema::CheckApproxKeyVaule(SourceLocation ApproxLoc,
     StringRef identName = newKey->getIdent()->getName();
 
     if (identName.compare("neglect") == 0) {
+      //TODOPACO: add check if neglect contains valid values derived from desigdoc table
       for(size_t i=0;i<keyvalues.size();i++) {
         StringRef valueName = keyvalues[i]->getIdent()->getName();
 
@@ -114,6 +115,7 @@ Decl *Sema::ActOnApproxDecorator(
     if (CheckApproxKeyVaule(ApproxLoc, ADec->getKeyValues(), keyvalues[i])) {
         ADec->appendKeyValue(keyvalues[i]);
     }
+  //TODOPACO: Add a function here to convert "neglect" to "mask"
 }
   return ADec;
 }
