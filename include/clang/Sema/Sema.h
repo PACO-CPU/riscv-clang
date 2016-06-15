@@ -3331,7 +3331,7 @@ public:
                                         bool GNUSyntax,
                                         ExprResult Init);
   //TODOPACO: Check for correctness when SemaExpr is done
-  APValue *getApproxKeyValue(Expr *expr, char* keyIdent);
+  APValue *getApproxKeyValue(Expr *expr, const char* keyIdent);
   APValue *getNeglectValue(Expr *expr);
   APValue *getInjectValue(Expr *expr);
   APValue *getRelaxValue(Expr *expr);
@@ -3339,7 +3339,7 @@ public:
   bool CheckRHSApprox(Expr *expr);
   bool CheckImmediate(Expr *expr);
   void SetInjectMaskBottomUp(Expr *expr, Expr *LHSExpr, Expr *RHSExpr);
-  void CheckRelaxMaskAndSetInjectMaskBottomUp(Expr *expr, APValue *relaxMask);
+  void SetRelaxMaskTopDownAndSetInjectMaskBottomUp(Expr *expr, APValue *relaxMask);
   bool ExprIsLeaf(Expr *expr);
   bool CheckApproxKeyVaule(SourceLocation ApproxLoc,
                                  std::vector<ApproxDecoratorDecl::KeyValue*> keyvalues, 
