@@ -3341,6 +3341,9 @@ public:
   void SetInjectMaskBottomUp(Expr *expr, Expr *LHSExpr, Expr *RHSExpr);
   void CheckRelaxMaskAndSetInjectMaskBottomUp(Expr *expr, APValue *relaxMask);
   bool ExprIsLeaf(Expr *expr);
+  bool CheckApproxKeyVaule(SourceLocation ApproxLoc,
+                                 std::vector<ApproxDecoratorDecl::KeyValue*> keyvalues, 
+                                 ApproxDecoratorDecl::KeyValue *newKey);
 
   ExprResult ActOnBinOp(Scope *S, SourceLocation TokLoc,
                         tok::TokenKind Kind, Expr *LHSExpr, Expr *RHSExpr);

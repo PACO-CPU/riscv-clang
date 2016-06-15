@@ -6403,5 +6403,10 @@ def err_approx_data_not_num : Error<
   "Numeric decorator data must be (complex) int or float">;
 def err_lhs_cannot_contain_approx_data : Error<
   "the left hand side can not contain approximated data">;
-
+def err_approx_keyvalue_not_valid : Error<
+  "KeyValue Key not valid">;
+def err_approx_keyvalue_mask_neglect : Error<
+  "Key 'neglect' and 'mask' cannot be used in one decorator">;
+def warn_approx_overide : Warning<
+  "Keyvalue has been overridden">;
 } // end of sema component.
