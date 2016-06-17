@@ -8653,7 +8653,7 @@ APValue *Sema::getApproxKeyValue(Expr *expr, const char* keyIdent) {
     const std::vector<ApproxDecoratorDecl::KeyValue*> KeyValues = ApproxDecl->getKeyValues();
 
     for(std::vector<ApproxDecoratorDecl::KeyValue*>::size_type i = 0; i != KeyValues.size(); i++) {
-      if (KeyValues[i]->getIdent()->getName().compare(keyIdent) == 0) {
+      if (StringRef(KeyValues[i]->getIdent()).compare(keyIdent) == 0) {
           result = new APValue(KeyValues[i]->getNum());
       }
     }

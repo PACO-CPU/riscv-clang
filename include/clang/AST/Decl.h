@@ -114,18 +114,18 @@ public:
     };
   
   protected:
-    IdentifierInfo *_ident;
+    std::string _ident;
     Kind _kind; 
 
     StringRef _str;
     APValue   _num;
   public:
-    KeyValue(IdentifierInfo *ident, const StringRef &str) : 
+    KeyValue(std::string ident, const StringRef &str) : 
       _ident(ident), _kind(String), _str(str) { }
-    KeyValue(IdentifierInfo *ident, const APValue   &num) : 
+    KeyValue(std::string ident, const APValue   &num) : 
       _ident(ident), _kind(Numeric), _num(num) { }
     
-    IdentifierInfo *getIdent() const {
+    std::string getIdent() const {
       return _ident;
     }
 

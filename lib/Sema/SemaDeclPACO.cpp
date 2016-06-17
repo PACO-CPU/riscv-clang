@@ -73,12 +73,12 @@ ApproxDecoratorDecl::KeyValue *ConvertNeglectToMask(ApproxDecoratorDecl::KeyValu
 bool Sema::CheckApproxKeyVaule(SourceLocation ApproxLoc,
                          std::vector<ApproxDecoratorDecl::KeyValue*> keyvalues,
                          ApproxDecoratorDecl::KeyValue *newKey) {
-    StringRef identName = newKey->getIdent()->getName();
+    StringRef identName = StringRef(newKey->getIdent());
 
     if (identName.compare("neglect") == 0) {
       //TODOPACO: add check if neglect contains valid values derived from desigdoc table
       for(size_t i=0;i<keyvalues.size();i++) {
-        StringRef valueName = keyvalues[i]->getIdent()->getName();
+        StringRef valueName = StringRef(keyvalues[i]->getIdent());
 
         /* Check if neglect already exits */
         if (valueName.compare("neglect") == 0) {
@@ -93,7 +93,7 @@ bool Sema::CheckApproxKeyVaule(SourceLocation ApproxLoc,
       } 
     } else if (identName.compare("mask") == 0) {
       for(size_t i=0;i<keyvalues.size();i++) {
-        StringRef valueName = keyvalues[i]->getIdent()->getName();
+        StringRef valueName = StringRef(keyvalues[i]->getIdent());
 
         /* Check if neglect already exits */
         if (valueName.compare("neglect") == 0) {
@@ -108,7 +108,7 @@ bool Sema::CheckApproxKeyVaule(SourceLocation ApproxLoc,
       }
     } else if (identName.compare("inject") == 0) {
       for(size_t i=0;i<keyvalues.size();i++) {
-        StringRef valueName = keyvalues[i]->getIdent()->getName();
+        StringRef valueName = StringRef(keyvalues[i]->getIdent());
         if(valueName.compare("inject") == 0) {
             Diag(ApproxLoc, diag::warn_approx_overide);
             keyvalues[i] = newKey;
@@ -117,7 +117,7 @@ bool Sema::CheckApproxKeyVaule(SourceLocation ApproxLoc,
       }
     } else if (identName.compare("relax") == 0) {
       for(size_t i=0;i<keyvalues.size();i++) {
-        StringRef valueName = keyvalues[i]->getIdent()->getName();
+        StringRef valueName = StringRef(keyvalues[i]->getIdent());
         if(valueName.compare("inject") == 0) {
             Diag(ApproxLoc, diag::warn_approx_overide);
             keyvalues[i] = newKey;
@@ -142,7 +142,7 @@ Decl *Sema::ActOnApproxDecorator(
 
   for(size_t i=0;i<keyvalue_count;i++) {
     if (CheckApproxKeyVaule(ApproxLoc, ADec->getKeyValues(), keyvalues[i])) {
-      if(keyvalues[i]->getIdent()->getName().compare("neglect") == 0)
+      if(StringRef(keyvalues[i]->getIdent()).compare("neglect") == 0)
         keyvalues[i] = ConvertNeglectToMask(keyvalues[i]);
       ADec->appendKeyValue(keyvalues[i]);
     }
@@ -163,7 +163,7 @@ ApproxDecoratorDecl::KeyValue *Sema::ActOnApproxDecoratorKeyValue(
     lit=reinterpret_cast<StringLiteral*>(expr);
     StringRef r=lit->getString();
     printf("'%.*s'\n",r.size(),r.data());
-    return new ApproxDecoratorDecl::KeyValue(ident,lit->getString());
+    return new ApproxDecoratorDecl::KeyValue(ident->getName().str(),lit->getString());
 
   } else { // numeric key-value
     if (!expr->EvaluateAsRValue(val,getASTContext())) {
@@ -197,7 +197,7 @@ ApproxDecoratorDecl::KeyValue *Sema::ActOnApproxDecoratorKeyValue(
         Diag(exprLoc,diag::err_approx_data_not_num);
         return 0;
     }
-    return new ApproxDecoratorDecl::KeyValue(ident,val.Val);
+    return new ApproxDecoratorDecl::KeyValue(ident->getName().str(),val.Val);
   }
 
 }
