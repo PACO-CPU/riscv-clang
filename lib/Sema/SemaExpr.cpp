@@ -42,6 +42,7 @@
 #include "clang/Sema/SemaFixItUtils.h"
 #include "clang/Sema/Template.h"
 #include <string.h>
+#include <stdio.h>
 using namespace clang;
 using namespace sema;
 
@@ -8645,30 +8646,17 @@ ApproxDecoratorDecl *Sema::getApproxDecl(Expr *expr) {
   return NULL;
 }
 
-struct KeyGetter
-{
-  const char *keyIdent;
-  KeyGetter(const char *ident) {keyIdent = ident; }
-  APValue* ret = NULL;
-  void operator() (ApproxDecoratorDecl::KeyValue* Key)
-  {
-    if(Key->getIdent()->getName().compare(keyIdent) == 0)
-    {
-      *ret = Key->getNum();
-    }
-  }
-};
-
 APValue *Sema::getApproxKeyValue(Expr *expr, const char* keyIdent) {
   ApproxDecoratorDecl *ApproxDecl = getApproxDecl(expr);
   APValue *result;
   if(ApproxDecl != NULL) {
     const std::vector<ApproxDecoratorDecl::KeyValue*> KeyValues = ApproxDecl->getKeyValues();
-    KeyGetter keyFun = for_each(KeyValues.begin(), KeyValues.end(), KeyGetter(keyIdent));
-    if(!(keyFun.ret == NULL))
-      result = new APValue(*keyFun.ret);
-    else
-      result = NULL;
+
+    for(std::vector<ApproxDecoratorDecl::KeyValue*>::size_type i = 0; i != KeyValues.size(); i++) {
+      if (KeyValues[i]->getIdent()->getName().compare(keyIdent) == 0) {
+          result = new APValue(KeyValues[i]->getNum());
+      }
+    }
   }
   else {
     result = NULL;
