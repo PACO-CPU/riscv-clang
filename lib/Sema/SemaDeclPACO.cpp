@@ -41,6 +41,34 @@
 
 using namespace clang;
 
+ApproxDecoratorDecl::KeyValue *ConvertNeglectToMask(ApproxDecoratorDecl::KeyValue *Key) {
+  APValue newValue;
+  switch(Key->getNum()->getInt().getRawData()) {
+    case(2): {
+      newValue = APValue(llvm::APSInt(7, 0b1111110));
+    }
+    case(4): {
+      newValue = APValue(llvm::APSInt(7, 0b1111100));
+    }
+    case(7): {
+      newValue = APValue(llvm::APSInt(7, 0b1111000));
+    }
+    case(10): {
+      newValue = APValue(llvm::APSInt(7, 0b1110000));
+    }
+    case(15): {
+      newValue = APValue(llvm::APSInt(7, 0b1100000));
+    }
+    case(20): {
+      newValue = APValue(llvm::APSInt(7, 0b1000000));
+    }
+    case(27): {
+      newValue = APValue(llvm::APSInt(7, 0b0000000));
+    }
+  }
+  return new ApproxDecoratorDecl::KeyValue(Key->getIdent(),newValue);
+}
+
 bool Sema::CheckApproxKeyVaule(SourceLocation ApproxLoc,
                          std::vector<ApproxDecoratorDecl::KeyValue*> keyvalues,
                          ApproxDecoratorDecl::KeyValue *newKey) {
@@ -113,10 +141,11 @@ Decl *Sema::ActOnApproxDecorator(
 
   for(size_t i=0;i<keyvalue_count;i++) {
     if (CheckApproxKeyVaule(ApproxLoc, ADec->getKeyValues(), keyvalues[i])) {
-        ADec->appendKeyValue(keyvalues[i]);
+      if(keyvalues[i]->getIdent()->getName().compare("neglect") == 0)
+        keyvalues[i] = ConvertNeglectToMask(keyvalues[i]);
+      ADec->appendKeyValue(keyvalues[i]);
     }
-  //TODOPACO: Add a function here to convert "neglect" to "mask"
-}
+  }
   return ADec;
 }
 

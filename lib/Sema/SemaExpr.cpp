@@ -8664,7 +8664,12 @@ APValue *Sema::getApproxKeyValue(Expr *expr, const char* keyIdent) {
   return result;
 }
 APValue *Sema::getNeglectValue(Expr *expr) {
-  return getApproxKeyValue(expr, "mask");
+  APValue * neglectValue = getApproxKeyValue(expr, "neglect");
+  APVAlue *maskValue = getApproxKeyValue(expr, "mask");
+  if(neglectValue != NULL)
+    return neglectValue;
+  else
+    return maskValue;
 }
 APValue *Sema::getInjectValue(Expr *expr) {
   return getApproxKeyValue(expr, "inject");
