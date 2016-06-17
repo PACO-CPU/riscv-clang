@@ -8648,7 +8648,7 @@ ApproxDecoratorDecl *Sema::getApproxDecl(Expr *expr) {
 
 APValue *Sema::getApproxKeyValue(Expr *expr, const char* keyIdent) {
   ApproxDecoratorDecl *ApproxDecl = getApproxDecl(expr);
-  APValue *result;
+  APValue *result = NULL;
   if(ApproxDecl != NULL) {
     const std::vector<ApproxDecoratorDecl::KeyValue*> KeyValues = ApproxDecl->getKeyValues();
 
@@ -8657,9 +8657,6 @@ APValue *Sema::getApproxKeyValue(Expr *expr, const char* keyIdent) {
           result = new APValue(KeyValues[i]->getNum());
       }
     }
-  }
-  else {
-    result = NULL;
   }
   return result;
 }
