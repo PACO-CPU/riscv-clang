@@ -436,6 +436,7 @@ public:
       ProtocolLocs(0),
       writtenBS(),
       ObjCQualifiers(0) {
+    ApproxDecorator = NULL;
   }
   ~DeclSpec() {
     delete [] ProtocolQualifiers;
