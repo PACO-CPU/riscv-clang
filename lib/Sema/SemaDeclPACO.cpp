@@ -43,7 +43,8 @@ using namespace clang;
 
 ApproxDecoratorDecl::KeyValue *ConvertNeglectToMask(ApproxDecoratorDecl::KeyValue *Key) {
   APValue newValue;
-  switch(Key->getNum()->getInt().getRawData()) {
+  uint64_t KeyData = *(Key->getNum().getInt().getRawData());
+  switch(KeyData) {
     case(2): {
       newValue = APValue(llvm::APSInt(7, 0b1111110));
     }

@@ -8665,7 +8665,7 @@ APValue *Sema::getApproxKeyValue(Expr *expr, const char* keyIdent) {
 }
 APValue *Sema::getNeglectValue(Expr *expr) {
   APValue * neglectValue = getApproxKeyValue(expr, "neglect");
-  APVAlue *maskValue = getApproxKeyValue(expr, "mask");
+  APValue *maskValue = getApproxKeyValue(expr, "mask");
   if(neglectValue != NULL)
     return neglectValue;
   else
