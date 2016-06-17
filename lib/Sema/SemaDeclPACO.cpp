@@ -70,13 +70,34 @@ ApproxDecoratorDecl::KeyValue *ConvertNeglectToMask(ApproxDecoratorDecl::KeyValu
   return new ApproxDecoratorDecl::KeyValue(Key->getIdent(),newValue);
 }
 
+bool neglect_amout_valid(uint64_t num) {
+    
+    switch (num) {
+    case 2:
+    case 4:
+    case 7:
+    case 10:
+    case 15:
+    case 20:
+    case 27:
+        return true;
+    }
+    return false;
+
 bool Sema::CheckApproxKeyVaule(SourceLocation ApproxLoc,
                          std::vector<ApproxDecoratorDecl::KeyValue*> keyvalues,
                          ApproxDecoratorDecl::KeyValue *newKey) {
     StringRef identName = StringRef(newKey->getIdent());
 
     if (identName.compare("neglect") == 0) {
-      //TODOPACO: add check if neglect contains valid values derived from desigdoc table
+
+      uint64_t num = newKey->getNum().getInt().getZExtValue();
+      /* only valid values for neglect are allowed */
+      if (!neglect_amout_valid(num)) {
+        Diag(ApproxLoc, diag::err_approx_wrong_neglect_amount);
+        return false;
+      }
+
       for(size_t i=0;i<keyvalues.size();i++) {
         StringRef valueName = StringRef(keyvalues[i]->getIdent());
 

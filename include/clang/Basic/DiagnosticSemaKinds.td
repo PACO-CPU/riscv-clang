@@ -6413,4 +6413,6 @@ def err_approx_keyvalue_mask_neglect : Error<
   "Key 'neglect' and 'mask' cannot be used in one decorator">;
 def warn_approx_overide : Warning<
   "Keyvalue has been overridden">;
+def err_approx_wrong_neglect_amount : Error<
+  "Neglect amount can only be 2,4,7,10,15,20, or 27">;
 } // end of sema component.
