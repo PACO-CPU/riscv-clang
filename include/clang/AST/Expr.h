@@ -144,7 +144,7 @@ public:
     TR = t;
   }
   
-  APValue *getNeglectMask() { return neglectMask; }
+  APValue *getNeglectMask() const { return neglectMask; }
   void setNeglectMask(APValue *mask) {
     //TODOPACO: add assert if value is not correct
     neglectMask = mask;

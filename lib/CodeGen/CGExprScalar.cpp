@@ -1,4 +1,3 @@
-//===--- CGExprScalar.cpp - Emit LLVM Code for Scalar Exprs ---------------===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -2402,7 +2401,16 @@ Value *ScalarExprEmitter::EmitAdd(const BinOpInfo &op) {
       return Builder.CreateAdd(op.LHS, op.RHS, "add");
     case LangOptions::SOB_Undefined:
       if (!CGF.SanOpts->SignedIntegerOverflow)
-        return Builder.CreateNSWAdd(op.LHS, op.RHS, "add");
+        if (op.E->getNeglectMask()) {
+            llvm::ConstantInt *constInt = Builder.getInt32((uint32_t) 
+                                          op.E->getNeglectMask()->getInt()
+                                          .getZExtValue());
+            return Builder.CreateCall3(CGF.CGM.getIntrinsic(
+                                       llvm::Intrinsic::riscv_add_approx), 
+                                       op.LHS, op.RHS, constInt);
+        } else {
+            return Builder.CreateNSWAdd(op.LHS, op.RHS, "add");
+        }
       // Fall through.
     case LangOptions::SOB_Trapping:
       return EmitOverflowCheckedBinOp(op);
@@ -2432,7 +2440,16 @@ Value *ScalarExprEmitter::EmitSub(const BinOpInfo &op) {
         return Builder.CreateSub(op.LHS, op.RHS, "sub");
       case LangOptions::SOB_Undefined:
         if (!CGF.SanOpts->SignedIntegerOverflow)
-          return Builder.CreateNSWSub(op.LHS, op.RHS, "sub");
+          if (op.E->getNeglectMask()) {
+            llvm::ConstantInt *constInt = Builder.getInt32((uint32_t)
+                                          op.E->getNeglectMask()->getInt()
+                                          .getZExtValue());
+            return Builder.CreateCall3(CGF.CGM.getIntrinsic(
+                                       llvm::Intrinsic::riscv_sub_approx), 
+                                       op.LHS, op.RHS, constInt);
+          } else {
+            return Builder.CreateNSWSub(op.LHS, op.RHS, "sub");
+          }
         // Fall through.
       case LangOptions::SOB_Trapping:
         return EmitOverflowCheckedBinOp(op);
