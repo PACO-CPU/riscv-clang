@@ -6403,6 +6403,10 @@ def err_approx_data_not_num : Error<
   "Numeric decorator data must be (complex) int or float">;
 def err_lhs_cannot_contain_approx_data : Error<
   "the left hand side can not contain approximated data">;
+def err_neglect_not_equal_on_paco_combine_mode_error : Error<
+  "left hand neglect and right hand neglect are not equal on paco combine mode error">;
+def err_inject_does_not_fit_into_relax : Error<
+  "The neglect mask of the result variable can not contain the approx neglect mask of the input">;  
 def err_approx_keyvalue_not_valid : Error<
   "KeyValue Key not valid">;
 def err_approx_keyvalue_mask_neglect : Error<

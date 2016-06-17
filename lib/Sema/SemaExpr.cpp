@@ -8642,7 +8642,6 @@ ApproxDecoratorDecl *Sema::getApproxDecl(Expr *expr) {
       return Var->GetApproxDecorator();
     }
   }
-  //TODOPACO: Add error handling
   return NULL;
 }
 
@@ -8650,32 +8649,32 @@ struct KeyGetter
 {
   const char *keyIdent;
   KeyGetter(const char *ident) {keyIdent = ident; }
-  APValue ret;
+  APValue* ret = NULL;
   void operator() (ApproxDecoratorDecl::KeyValue* Key)
   {
     if(Key->getIdent()->getName().compare(keyIdent) == 0)
     {
-      ret = Key->getNum();
+      *ret = Key->getNum();
     }
   }
 };
 
 APValue *Sema::getApproxKeyValue(Expr *expr, const char* keyIdent) {
   ApproxDecoratorDecl *ApproxDecl = getApproxDecl(expr);
-  const std::vector<ApproxDecoratorDecl::KeyValue*> KeyValues = ApproxDecl->getKeyValues();
   APValue *result;
-
-
-  KeyGetter keyFun = for_each(KeyValues.begin(), KeyValues.end(), KeyGetter(keyIdent));
-  result = new APValue(keyFun.ret);
-
-  if(result != NULL) {
-    return result;
-  }  else {
-    //TODOPACO: Add error handling
+  if(ApproxDecl != NULL) {
+    const std::vector<ApproxDecoratorDecl::KeyValue*> KeyValues = ApproxDecl->getKeyValues();
+    KeyGetter keyFun = for_each(KeyValues.begin(), KeyValues.end(), KeyGetter(keyIdent));
+    if(!(keyFun.ret == NULL))
+      result = new APValue(*keyFun.ret);
+    else
+      result = NULL;
   }
+  else {
+    result = NULL;
+  }
+  return result;
 }
-
 APValue *Sema::getNeglectValue(Expr *expr) {
   return getApproxKeyValue(expr, "mask");
 }
@@ -8687,9 +8686,9 @@ APValue *Sema::getRelaxValue(Expr *expr) {
 }
 
 bool Sema::CheckRHSApprox(Expr *expr) {
-  APValue* neglectMask = getNeglectValue(expr);
+  APValue* neglectValue = getNeglectValue(expr);
   APValue* injectValue = getInjectValue(expr);
-  if(ExprIsLeaf(expr) && neglectMask!=NULL && *(neglectMask->getInt().getRawData()) > 0 && injectValue != NULL && *(injectValue->getInt().getRawData()) > 0) {
+  if(ExprIsLeaf(expr) && neglectValue!=NULL && *(neglectValue->getInt().getRawData()) > 0 && injectValue != NULL && *(injectValue->getInt().getRawData()) > 0) {
     return true;
   }
   else {
@@ -8699,7 +8698,7 @@ bool Sema::CheckRHSApprox(Expr *expr) {
     RHSExpr = expr->getPACORHS();
     if(LHSExpr != NULL) {
       if(RHSExpr != NULL) {
-        return CheckRHSApprox(LHSExpr) & CheckRHSApprox(RHSExpr);
+        return CheckRHSApprox(LHSExpr) | CheckRHSApprox(RHSExpr);
       }
       else {
         return CheckRHSApprox(LHSExpr);
@@ -8721,9 +8720,7 @@ void Sema::CheckAssignmentForPACOAndSetNeglectMask(Expr *LHSExpr, Expr *RHSExpr)
   APValue *relaxAssignment = getRelaxValue(LHSExpr);
   //If neglectAssignment exists, so LHSExpr is approx
   if(neglectAssignment != NULL && relaxAssignment != NULL && *(relaxAssignment->getInt().getRawData()) != 0) {
-    SetInjectMaskAndRelaxMaskBottomUp(RHSExpr, neglectAssignment);
-    //TODOPACO: set neglectMask of Expressions depending on injectMask
-    //TODOPACO: Think about backpropagation of injectmask
+    SetMasksBottomUp(RHSExpr, neglectAssignment);
   }
   else {
     //RHS is Approx, throw error
@@ -8735,14 +8732,12 @@ void Sema::CheckAssignmentForPACOAndSetNeglectMask(Expr *LHSExpr, Expr *RHSExpr)
 }
 
 bool Sema::CheckImmediate(Expr *expr) {
+  //TODOPACO: figure out if there is a better way to test if expr contains immediate value
   if(IntegerLiteral* test = dyn_cast<IntegerLiteral>(expr))
     return true;
   else
     return false;
 }
-
-
-//void Sema::RewriteInjectMask
 
 void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPValue){
   uint64_t leftInjectMask, rightInjectMask, injectMask, relaxMask;
@@ -8805,29 +8800,31 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
         injectMask = leftInjectMask;
       }
       else {
-        //TODOPACO: add error message
-        
+        Diag(expr->getExprLoc(), diag::err_neglect_not_equal_on_paco_combine_mode_error);
       }
     }
-    //TODOPACO: Solve APValue creation problem
-    APValue* result;// = injectMask;//*APValue(APInt(7, injectMask);
+    APValue* result = new APValue(llvm::APSInt(7, injectMask));
     expr->setInjectMask(result);
     relaxMask = *(relaxAPValue->getInt().getRawData());
-    if(((relaxMask&injectMask)-injectMask)!=0) {
-      //TODOPACO: Ad error handling
+    //Test if injectMask fits into relaxMask
+    if(((relaxMask&injectMask)-injectMask)==0) {
+      expr->setNeglectMask(expr->getInjectMask());
+    }
+    else {
+      Diag(expr->getExprLoc(), diag::err_inject_does_not_fit_into_relax);
     }
   }
 }
-void Sema::SetInjectMaskAndRelaxMaskBottomUp(Expr *expr, APValue *relaxMask) {
+void Sema::SetMasksBottomUp(Expr *expr, APValue *relaxMask) {
   Expr *LHSExpr;
   Expr *RHSExpr;
   LHSExpr = expr->getPACOLHS();
   RHSExpr = expr->getPACORHS();
   if(!(ExprIsLeaf(LHSExpr) && ExprIsLeaf(RHSExpr))) {
-    SetInjectMaskAndRelaxMaskBottomUp(LHSExpr, relaxMask);
-    SetInjectMaskAndRelaxMaskBottomUp(RHSExpr, relaxMask);
-    SetMasks(expr, LHSExpr, RHSExpr, relaxMask);
+    SetMasksBottomUp(LHSExpr, relaxMask);
+    SetMasksBottomUp(RHSExpr, relaxMask);
   }
+  SetMasks(expr, LHSExpr, RHSExpr, relaxMask);
 }
 bool Sema::ExprIsLeaf(Expr *expr) {
   Expr *LHSExpr;

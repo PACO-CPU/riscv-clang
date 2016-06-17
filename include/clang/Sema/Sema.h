@@ -3339,7 +3339,7 @@ public:
   bool CheckRHSApprox(Expr *expr);
   bool CheckImmediate(Expr *expr);
   void SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxMask);
-  void SetInjectMaskAndRelaxMaskBottomUp(Expr *expr, APValue *relaxMask);
+  void SetMasksBottomUp(Expr *expr, APValue *relaxMask);
   bool ExprIsLeaf(Expr *expr);
   bool CheckApproxKeyVaule(SourceLocation ApproxLoc,
                                  std::vector<ApproxDecoratorDecl::KeyValue*> keyvalues, 
