@@ -83,6 +83,7 @@ bool neglect_amout_valid(uint64_t num) {
         return true;
     }
     return false;
+}
 
 bool Sema::CheckApproxKeyVaule(SourceLocation ApproxLoc,
                          std::vector<ApproxDecoratorDecl::KeyValue*> keyvalues,
