@@ -8810,11 +8810,13 @@ void Sema::SetMasksBottomUp(Expr *expr, APValue *relaxMask) {
   Expr *RHSExpr;
   LHSExpr = expr->getPACOLHS();
   RHSExpr = expr->getPACORHS();
-  if(!(ExprIsLeaf(LHSExpr) && ExprIsLeaf(RHSExpr))) {
-    SetMasksBottomUp(LHSExpr, relaxMask);
-    SetMasksBottomUp(RHSExpr, relaxMask);
+  if (LHSExpr != NULL && RHSExpr != NULL) {
+    if(!(ExprIsLeaf(LHSExpr) && ExprIsLeaf(RHSExpr))) {
+      SetMasksBottomUp(LHSExpr, relaxMask);
+      SetMasksBottomUp(RHSExpr, relaxMask);
+    }
+    SetMasks(expr, LHSExpr, RHSExpr, relaxMask);
   }
-  SetMasks(expr, LHSExpr, RHSExpr, relaxMask);
 }
 bool Sema::ExprIsLeaf(Expr *expr) {
   Expr *LHSExpr;
