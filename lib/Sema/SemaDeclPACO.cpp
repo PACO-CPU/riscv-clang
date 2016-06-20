@@ -43,30 +43,37 @@ using namespace clang;
 
 ApproxDecoratorDecl::KeyValue *ConvertNeglectToMask(ApproxDecoratorDecl::KeyValue *Key) {
   APValue newValue;
+  llvm::APSInt aint = llvm::APSInt(7);
+  aint = 0b1111111;
   uint64_t KeyData = *(Key->getNum().getInt().getRawData());
   switch(KeyData) {
-    case(2): {
-      newValue = APValue(llvm::APSInt(7, 0b1111110));
-    }
-    case(4): {
-      newValue = APValue(llvm::APSInt(7, 0b1111100));
-    }
-    case(7): {
-      newValue = APValue(llvm::APSInt(7, 0b1111000));
-    }
-    case(10): {
-      newValue = APValue(llvm::APSInt(7, 0b1110000));
-    }
-    case(15): {
-      newValue = APValue(llvm::APSInt(7, 0b1100000));
-    }
-    case(20): {
-      newValue = APValue(llvm::APSInt(7, 0b1000000));
-    }
-    case(27): {
-      newValue = APValue(llvm::APSInt(7, 0b0000000));
-    }
+    case 2: 
+      aint = 0b1111110;
+      break;
+    case 4: 
+      aint = 0b1111100;
+      break;
+    case 7: 
+      aint = 0b1111000;
+      break;
+    case 10: 
+      aint = 0b1110000;
+      break;
+    case 15: 
+      aint = 0b1100000;
+      break;
+    case 20: 
+      aint = 0b1000000;
+      break;
+    case 27: 
+      aint = 0b0000000;
+      break;
   }
+
+  if (aint != 0b1111111) { 
+    newValue = APValue(aint);
+  }
+  KeyData = *(newValue.getInt().getRawData());
   return new ApproxDecoratorDecl::KeyValue(Key->getIdent(),newValue);
 }
 
@@ -140,7 +147,7 @@ bool Sema::CheckApproxKeyVaule(SourceLocation ApproxLoc,
     } else if (identName.compare("relax") == 0) {
       for(size_t i=0;i<keyvalues.size();i++) {
         StringRef valueName = StringRef(keyvalues[i]->getIdent());
-        if(valueName.compare("inject") == 0) {
+        if(valueName.compare("relax") == 0) {
             Diag(ApproxLoc, diag::warn_approx_overide);
             keyvalues[i] = newKey;
             return true;
