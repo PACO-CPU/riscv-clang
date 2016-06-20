@@ -455,7 +455,10 @@ private:
   /// #pragma paco intermediate_literal <mode>
   void HandlePragmaIntermediateLiteral();
   
-  void setExpressionChildsForPACO(Expr* LHS, Expr* oldLHS, Expr* oldRHS);
+  ApproxDecoratorDecl *getApproxDecl(Expr *expr);
+  APValue *getNeglectValue(Expr *expr);
+  APValue *getRelaxValue(Expr *expr);
+  APValue *getApproxKeyValue(Expr *expr, const char* keyIdent);
 
   /// GetLookAheadToken - This peeks ahead N tokens and returns that token
   /// without consuming any tokens.  LookAhead(0) returns 'Tok', LookAhead(1)

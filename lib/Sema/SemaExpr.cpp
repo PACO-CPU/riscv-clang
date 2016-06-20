@@ -8735,7 +8735,10 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
   leftIsImmediate = CheckImmediate(LHSExpr);
   rightIsImmediate = CheckImmediate(RHSExpr);
   
-  if(ExprIsLeaf(LHSExpr) && ExprIsLeaf(RHSExpr)) {
+  expr->setPACOLHS(LHSExpr);
+  expr->setPACORHS(LHSExpr);
+  
+  if(ExprIsLeaf(LHSExpr)) {
     if(leftIsImmediate) {
       switch(PACOIntermediateLiteralMode){
         case(Sema::PPACOILM_Precise): {
@@ -8752,6 +8755,11 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
     else {
       leftInjectMask = *(getNeglectValue(LHSExpr)->getInt().getRawData());
     }
+  }
+  else {
+    leftInjectMask = *(LHSExpr->getInjectMask()->getInt().getRawData());
+  }
+  if(ExprIsLeaf(RHSExpr)) {
     if(rightIsImmediate) {
       switch(PACOIntermediateLiteralMode){
         case(Sema::PPACOILM_Precise): {
@@ -8770,8 +8778,6 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
     }
   }
   else {
-    //Both are not immediate
-    leftInjectMask = *(LHSExpr->getInjectMask()->getInt().getRawData());
     rightInjectMask = *(RHSExpr->getInjectMask()->getInt().getRawData());
   }
 
@@ -8793,7 +8799,9 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
         Diag(expr->getExprLoc(), diag::err_neglect_not_equal_on_paco_combine_mode_error);
       }
     }
-    APValue* result = new APValue(llvm::APSInt(7, injectMask));
+    llvm::APSInt aint = llvm::APSInt(7);
+    aint = injectMask;
+    APValue* result = new APValue(aint);
     expr->setInjectMask(result);
     relaxMask = *(relaxAPValue->getInt().getRawData());
     //Test if injectMask fits into relaxMask
@@ -8829,6 +8837,10 @@ bool Sema::ExprIsLeaf(Expr *expr) {
     return false;
 }
 
+void Sema::ActOnApproxMask(Expr *expr, Expr *LHSExpr, Expr *RHSExpr) {
+  SetMasks(expr, LHSExpr, RHSExpr, expr->getRelaxMask());
+}
+
 /// CreateBuiltinBinOp - Creates a new built-in binary operation with
 /// operator @p Opc at location @c TokLoc. This routine only supports
 /// built-in operations; ActOnBinOp handles overloaded operators.
@@ -8860,12 +8872,14 @@ ExprResult Sema::CreateBuiltinBinOp(SourceLocation OpLoc,
   QualType CompResultTy; // Type of computation result
   ExprValueKind VK = VK_RValue;
   ExprObjectKind OK = OK_Ordinary;
+  
+  ExprResult retResult;
 
   switch (Opc) {
   case BO_Assign:
     if(getLangOpts().PACO)
     {
-      CheckAssignmentForPACOAndSetNeglectMask(LHSExpr, RHSExpr);
+      //CheckAssignmentForPACOAndSetNeglectMask(LHSExpr, RHSExpr);
     }
     ResultTy = CheckAssignmentOperands(LHS.get(), RHS, OpLoc, QualType());
     if (getLangOpts().CPlusPlus &&

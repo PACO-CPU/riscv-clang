@@ -154,6 +154,43 @@ Parser::ParseExpressionWithLeadingExtension(SourceLocation ExtLoc) {
   return ParseRHSOfBinaryExpression(LHS, prec::Comma);
 }
 
+ApproxDecoratorDecl *Parser::getApproxDecl(Expr *expr) {
+  if (DeclRefExpr *DRE = dyn_cast<DeclRefExpr>(expr->IgnoreParens())) {
+    if (VarDecl *Var = dyn_cast<VarDecl>(DRE->getDecl())) {
+      return Var->GetApproxDecorator();
+    }
+  }
+  return NULL;
+}
+
+APValue *Parser::getApproxKeyValue(Expr *expr, const char* keyIdent) {
+  ApproxDecoratorDecl *ApproxDecl = getApproxDecl(expr);
+  APValue *result = NULL;
+  if(ApproxDecl != NULL) {
+    const std::vector<ApproxDecoratorDecl::KeyValue*> KeyValues = ApproxDecl->getKeyValues();
+
+    for(std::vector<ApproxDecoratorDecl::KeyValue*>::size_type i = 0; i != KeyValues.size(); i++) {
+      if (StringRef(KeyValues[i]->getIdent()).compare(keyIdent) == 0) {
+          result = new APValue(KeyValues[i]->getNum());
+      }
+    }
+  }
+  return result;
+}
+
+APValue *Parser::getNeglectValue(Expr *expr) {
+  APValue * neglectValue = getApproxKeyValue(expr, "neglect");
+  APValue *maskValue = getApproxKeyValue(expr, "mask");
+  if(neglectValue != NULL)
+    return neglectValue;
+  else
+    return maskValue;
+}
+
+APValue *Parser::getRelaxValue(Expr *expr) {
+  return getApproxKeyValue(expr, "relax");
+}
+
 /// \brief Parse an expr that doesn't include (top-level) commas.
 ExprResult Parser::ParseAssignmentExpression(TypeCastState isTypeCast) {
   if (Tok.is(tok::code_completion)) {
@@ -168,6 +205,10 @@ ExprResult Parser::ParseAssignmentExpression(TypeCastState isTypeCast) {
   ExprResult LHS = ParseCastExpression(/*isUnaryExpression=*/false,
                                        /*isAddressOfOperand=*/false,
                                        isTypeCast);
+  APValue* relaxMask = getRelaxValue(LHS.take());
+  APValue* neglectMask = getNeglectValue(LHS.take());
+  if(relaxMask != NULL && *(relaxMask->getInt().getRawData()) == 1)
+    LHS.take()->setRelaxMask(neglectMask);
   return ParseRHSOfBinaryExpression(LHS, prec::Assignment);
 }
 
@@ -215,11 +256,6 @@ bool Parser::isNotExpressionStart() {
     return true;
   // If this is a decl-specifier, we can't be at the start of an expression.
   return isKnownToBeDeclarationSpecifier();
-}
-
-void Parser::setExpressionChildsForPACO(Expr* LHS, Expr* oldLHS, Expr* oldRHS) {
-  LHS->setPACOLHS(oldLHS);
-  LHS->setPACORHS(oldRHS);
 }
 
 /// \brief Parse a binary expression that starts with \p LHS and has a
@@ -328,20 +364,13 @@ Parser::ParseRHSOfBinaryExpression(ExprResult LHS, prec::Level MinPrec) {
     // parse as if we were allowed braced-init-lists everywhere, and check that
     // they only appear on the RHS of assignments later.
     ExprResult RHS;
-    ExprResult oldLHS;
-    ExprResult oldRHS;
-    oldLHS = NULL;
-    oldRHS = NULL;
     bool RHSIsInitList = false;
     if (getLangOpts().CPlusPlus11 && Tok.is(tok::l_brace)) {
-      oldRHS = RHS;
       RHS = ParseBraceInitializer();
       RHSIsInitList = true;
     } else if (getLangOpts().CPlusPlus && NextTokPrec <= prec::Conditional) {
-      oldRHS = RHS;
       RHS = ParseAssignmentExpression();
     } else {
-      oldRHS = RHS;
       RHS = ParseCastExpression(false);
     }
     if (RHS.isInvalid())
@@ -366,12 +395,16 @@ Parser::ParseRHSOfBinaryExpression(ExprResult LHS, prec::Level MinPrec) {
           << /*LHS*/0 << PP.getSpelling(Tok) << Actions.getExprRange(RHS.get());
         RHS = ExprError();
       }
+      
+      if(getLangOpts().PACO){
+        RHS.take()->setRelaxMask(LHS.take()->getRelaxMask());
+      }
+      
       // If this is left-associative, only parse things on the RHS that bind
       // more tightly than the current operator.  If it is left-associative, it
       // is okay, to bind exactly as tightly.  For example, compile A=B=C=D as
       // A=(B=(C=D)), where each paren is a level of recursion here.
       // The function takes ownership of the RHS.
-      oldRHS = RHS;
       RHS = ParseRHSOfBinaryExpression(RHS, 
                             static_cast<prec::Level>(ThisPrec + !isRightAssoc));
       RHSIsInitList = false;
@@ -398,6 +431,11 @@ Parser::ParseRHSOfBinaryExpression(ExprResult LHS, prec::Level MinPrec) {
 
     if (!LHS.isInvalid()) {
       // Combine the LHS and RHS into the LHS (e.g. build AST).
+      Expr *approxLHS;
+      Expr *approxRHS;
+      approxLHS = NULL;
+      approxRHS = NULL;
+      
       if (TernaryMiddle.isInvalid()) {
         // If we're using '>>' as an operator within a template
         // argument list (in C++98), suggest the addition of
@@ -407,16 +445,29 @@ Parser::ParseRHSOfBinaryExpression(ExprResult LHS, prec::Level MinPrec) {
                              diag::warn_cxx0x_right_shift_in_template_arg,
                          SourceRange(Actions.getExprRange(LHS.get()).getBegin(),
                                      Actions.getExprRange(RHS.get()).getEnd()));
-        oldLHS = LHS;
+        if(getLangOpts().PACO){
+          if(ThisPrec == prec::Assignment){
+            
+          }
+          else {
+            RHS.take()->setRelaxMask(LHS.take()->getRelaxMask());
+          }
+        }
+        approxLHS = LHS.take();
         LHS = Actions.ActOnBinOp(getCurScope(), OpToken.getLocation(),
                                  OpToken.getKind(), LHS.take(), RHS.take());
         if(getLangOpts().PACO){
-          setExpressionChildsForPACO(LHS.take(), oldLHS.take(), oldRHS.take());
+          //setExpressionChildsForPACO(LHS.take(), oldLHS.take(), oldRHS.take());
         }
       } else
         LHS = Actions.ActOnConditionalOp(OpToken.getLocation(), ColonLoc,
                                          LHS.take(), TernaryMiddle.take(),
                                          RHS.take());
+      if(getLangOpts().PACO){
+        approxRHS = RHS.take();
+        LHS.take()->setRelaxMask(RHS.take()->getRelaxMask());
+        Actions.ActOnApproxMask(LHS.take(), approxLHS, approxRHS);
+      }
     }
   }
 }

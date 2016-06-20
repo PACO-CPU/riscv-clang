@@ -3344,6 +3344,7 @@ public:
   bool CheckApproxKeyVaule(SourceLocation ApproxLoc,
                                  std::vector<ApproxDecoratorDecl::KeyValue*> keyvalues, 
                                  ApproxDecoratorDecl::KeyValue *newKey);
+  void ActOnApproxMask(Expr *expr, Expr *LHSExpr, Expr *RHSExpr);
 
   ExprResult ActOnBinOp(Scope *S, SourceLocation TokLoc,
                         tok::TokenKind Kind, Expr *LHSExpr, Expr *RHSExpr);
