@@ -5683,7 +5683,8 @@ Decl *Parser::ParseApproxDecorator(SourceLocation &DeclEnd) {
   SmallVector<ApproxDecoratorDecl::KeyValue*, 8> keyvalues;
   
   //TODOPACO: Add standard keyvalue "relax = 1" here
-  keyvalues.push_back(new ApproxDecoratorDecl::KeyValue(std::string("relax"),APValue(llvm::APSInt(1, 1))));
+  llvm::APSInt val = llvm::APSInt(1);val = 1;
+  keyvalues.push_back(new ApproxDecoratorDecl::KeyValue(std::string("relax"),APValue(val)));
 
   // Eat 'approx' and '('.
   SourceLocation ApproxLoc=ConsumeToken();
