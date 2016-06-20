@@ -2400,7 +2400,7 @@ Value *ScalarExprEmitter::EmitAdd(const BinOpInfo &op) {
     case LangOptions::SOB_Defined:
       return Builder.CreateAdd(op.LHS, op.RHS, "add");
     case LangOptions::SOB_Undefined:
-      if (!CGF.SanOpts->SignedIntegerOverflow)
+      if (!CGF.SanOpts->SignedIntegerOverflow) {
         if (op.E->getNeglectMask()) {
             llvm::ConstantInt *constInt = Builder.getInt32((uint32_t) 
                                           op.E->getNeglectMask()->getInt()
@@ -2411,6 +2411,7 @@ Value *ScalarExprEmitter::EmitAdd(const BinOpInfo &op) {
         } else {
             return Builder.CreateNSWAdd(op.LHS, op.RHS, "add");
         }
+     }
       // Fall through.
     case LangOptions::SOB_Trapping:
       return EmitOverflowCheckedBinOp(op);
@@ -2439,7 +2440,7 @@ Value *ScalarExprEmitter::EmitSub(const BinOpInfo &op) {
       case LangOptions::SOB_Defined:
         return Builder.CreateSub(op.LHS, op.RHS, "sub");
       case LangOptions::SOB_Undefined:
-        if (!CGF.SanOpts->SignedIntegerOverflow)
+        if (!CGF.SanOpts->SignedIntegerOverflow) {
           if (op.E->getNeglectMask()) {
             llvm::ConstantInt *constInt = Builder.getInt32((uint32_t)
                                           op.E->getNeglectMask()->getInt()
@@ -2450,6 +2451,7 @@ Value *ScalarExprEmitter::EmitSub(const BinOpInfo &op) {
           } else {
             return Builder.CreateNSWSub(op.LHS, op.RHS, "sub");
           }
+        }
         // Fall through.
       case LangOptions::SOB_Trapping:
         return EmitOverflowCheckedBinOp(op);
