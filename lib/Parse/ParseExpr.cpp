@@ -334,13 +334,16 @@ Parser::ParseRHSOfBinaryExpression(ExprResult LHS, prec::Level MinPrec) {
     oldRHS = NULL;
     bool RHSIsInitList = false;
     if (getLangOpts().CPlusPlus11 && Tok.is(tok::l_brace)) {
+      oldRHS = RHS;
       RHS = ParseBraceInitializer();
       RHSIsInitList = true;
-    } else if (getLangOpts().CPlusPlus && NextTokPrec <= prec::Conditional)
+    } else if (getLangOpts().CPlusPlus && NextTokPrec <= prec::Conditional) {
+      oldRHS = RHS;
       RHS = ParseAssignmentExpression();
-    else
+    } else {
+      oldRHS = RHS;
       RHS = ParseCastExpression(false);
-
+    }
     if (RHS.isInvalid())
       LHS = ExprError();
     
