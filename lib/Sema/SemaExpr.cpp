@@ -8783,21 +8783,22 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
 
   //Compare both variables and assign the injectmask depending on pragma paco comine
   switch(PACOCombineMode){
-    case(Sema::PPACOCM_LeastPrecise): {
+    case Sema::PPACOCM_LeastPrecise:
       //process the expr as approximate as possible
       injectMask = leftInjectMask & rightInjectMask;
-    }
-    case(Sema::PPACOCM_MostPrecise): {
+      break;
+    case Sema::PPACOCM_MostPrecise: 
       //process the expr as precise as possible
       injectMask = leftInjectMask | rightInjectMask;
-    }
-    case(Sema::PPACOCM_Error): {
+      break;
+    case Sema::PPACOCM_Error: 
       if(leftInjectMask==rightInjectMask) {
         injectMask = leftInjectMask;
       }
       else {
         Diag(expr->getExprLoc(), diag::err_neglect_not_equal_on_paco_combine_mode_error);
       }
+      break;
     }
     llvm::APSInt aint = llvm::APSInt(7);
     aint = injectMask;
@@ -8811,7 +8812,6 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
     else {
       Diag(expr->getExprLoc(), diag::err_inject_does_not_fit_into_relax);
     }
-  }
 }
 void Sema::SetMasksBottomUp(Expr *expr, APValue *relaxMask) {
   Expr *LHSExpr;
