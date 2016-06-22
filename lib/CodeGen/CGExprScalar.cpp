@@ -2402,14 +2402,16 @@ Value *ScalarExprEmitter::EmitAdd(const BinOpInfo &op) {
     case LangOptions::SOB_Undefined:
       if (!CGF.SanOpts->SignedIntegerOverflow) {
         if (op.E->getNeglectMask()) {
-            llvm::ConstantInt *constInt = Builder.getInt32((uint32_t) 
-                                          op.E->getNeglectMask()->getInt()
-                                          .getZExtValue());
+          uint32_t neglectVal = op.E->getNeglectMask()->getInt()
+                                .getZExtValue();
+          if (neglectVal != 0b1111111) {  
+            neglectVal = neglectVal >> 1; /* the last bit is implicit */
+            llvm::ConstantInt *constInt = Builder.getInt32(neglectVal);
             return Builder.CreateCall3(CGF.CGM.getIntrinsic(
                                        llvm::Intrinsic::riscv_add_approx), 
                                        op.LHS, op.RHS, constInt);
-        } else {
-            return Builder.CreateNSWAdd(op.LHS, op.RHS, "add");
+          } 
+          return Builder.CreateNSWAdd(op.LHS, op.RHS, "add");
         }
      }
       // Fall through.
@@ -2442,15 +2444,18 @@ Value *ScalarExprEmitter::EmitSub(const BinOpInfo &op) {
       case LangOptions::SOB_Undefined:
         if (!CGF.SanOpts->SignedIntegerOverflow) {
           if (op.E->getNeglectMask()) {
-            llvm::ConstantInt *constInt = Builder.getInt32((uint32_t)
-                                          op.E->getNeglectMask()->getInt()
-                                          .getZExtValue());
-            return Builder.CreateCall3(CGF.CGM.getIntrinsic(
-                                       llvm::Intrinsic::riscv_sub_approx), 
-                                       op.LHS, op.RHS, constInt);
-          } else {
-            return Builder.CreateNSWSub(op.LHS, op.RHS, "sub");
+            uint32_t neglectVal = op.E->getNeglectMask()->getInt()
+                                    .getZExtValue();
+            if (neglectVal != 0b1111111) {
+              neglectVal = neglectVal >> 1; /* the last bit is implicit */
+              llvm::ConstantInt *constInt = Builder.getInt32(neglectVal);
+              return Builder.CreateCall3(CGF.CGM.getIntrinsic(
+                                         llvm::Intrinsic::riscv_sub_approx), 
+                                         op.LHS, op.RHS, constInt);
+            } 
           }
+          return Builder.CreateNSWSub(op.LHS, op.RHS, "sub");
+          
         }
         // Fall through.
       case LangOptions::SOB_Trapping:
