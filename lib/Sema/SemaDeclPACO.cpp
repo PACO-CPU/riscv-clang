@@ -166,16 +166,27 @@ Decl *Sema::ActOnApproxDecorator(
   ApproxDecoratorDecl::KeyValue **keyvalues,
   size_t keyvalue_count) {
   ApproxDecoratorDecl *ADec = 0;
+  bool has_relax = false;
 
   ADec=ApproxDecoratorDecl::Create(Context,CurContext,ApproxLoc);
 
   for(size_t i=0;i<keyvalue_count;i++) {
     if (CheckApproxKeyVaule(ApproxLoc, ADec->getKeyValues(), keyvalues[i])) {
-      if(StringRef(keyvalues[i]->getIdent()).compare("neglect") == 0)
+      if(StringRef(keyvalues[i]->getIdent()).compare("neglect") == 0) {
         keyvalues[i] = ConvertNeglectToMask(keyvalues[i]);
+      } else if (StringRef(keyvalues[i]->getIdent()).compare("relax") == 0) {
+        has_relax = true;
+      }
       ADec->appendKeyValue(keyvalues[i]);
     }
   }
+
+  if(!has_relax) {
+    llvm::APSInt val = llvm::APSInt(1);val = 1;
+    ADec->appendKeyValue(new ApproxDecoratorDecl::KeyValue(std::string("relax"),
+                                                           APValue(val)));
+  }
+
   return ADec;
 }
 
