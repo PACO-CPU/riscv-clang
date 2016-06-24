@@ -3080,7 +3080,17 @@ ExprResult Sema::ActOnNumericConstant(const Token &Tok, Scope *UDLScope) {
 
 ExprResult Sema::ActOnParenExpr(SourceLocation L, SourceLocation R, Expr *E) {
   assert((E != 0) && "ActOnParenExpr() missing expr");
-  return Owned(new (Context) ParenExpr(L, R, E));
+  ExprResult result = Owned(new (Context) ParenExpr(L, R, E));
+  if(getLangOpts().PACO) {
+    // Copy all PACO members to the new expression
+    Expr *newExpr = result.take();
+    newExpr->setPACOLHS(E->getPACOLHS());
+    newExpr->setPACORHS(E->getPACORHS());
+    newExpr->setNeglectMask(E->getNeglectMask());
+    newExpr->setInjectMask(E->getInjectMask());
+    newExpr->setRelaxMask(E->getRelaxMask());
+  }
+  return result;
 }
 
 static bool CheckVecStepTraitOperandType(Sema &S, QualType T,
@@ -8738,7 +8748,7 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
   rightIsImmediate = CheckImmediate(RHSExpr);
   
   expr->setPACOLHS(LHSExpr);
-  expr->setPACORHS(LHSExpr);
+  expr->setPACORHS(RHSExpr);
   
   if(ExprIsLeaf(LHSExpr)) {
     if(leftIsImmediate) {
