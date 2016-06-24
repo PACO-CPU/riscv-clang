@@ -8844,7 +8844,7 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
     relaxMask = 0b1111111; //all precise
   }
   //Test if injectMask fits into relaxMask
-  if((relaxMask|injectMask)==relaxMask) {
+  if((relaxMask&injectMask)==relaxMask) {
     expr->setNeglectMask(expr->getInjectMask());
   }
   else {
