@@ -214,7 +214,7 @@ ExprResult Parser::ParseAssignmentExpression(TypeCastState isTypeCast) {
     else {
       llvm::APSInt aint = llvm::APSInt(7);
       aint = 0b1111111;  //all precise
-      relaxMask = aint;
+      relaxMask = new APValue(aint);
       LHS.take()->setRelaxMask(neglectMask);
     }
     setRelaxIsSaved(true);
@@ -224,7 +224,8 @@ ExprResult Parser::ParseAssignmentExpression(TypeCastState isTypeCast) {
     setRelaxIsSaved(false);
   }
   else {
-    LHS.take()->setRelaxMask(getSavedRelaxMask());
+    neglectMask = getSavedRelaxMask();
+    LHS.take()->setRelaxMask(neglectMask);
     result = ParseRHSOfBinaryExpression(LHS, prec::Assignment);
   }
   return result;

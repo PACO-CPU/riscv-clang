@@ -194,7 +194,7 @@ class Parser : public CodeCompletionHandler {
   };
   
   APValue* SavedRelaxMask;
-  bool RelaxIsSaved;
+  bool RelaxIsSaved = false;
 
   /// Factory object for creating AttributeList objects.
   AttributeFactory AttrFactory;
@@ -218,13 +218,13 @@ class Parser : public CodeCompletionHandler {
   bool SkipFunctionBodies;
 
 public:
-  Parser(Preprocessor &PP, Sema &Actions, bool SkipFunctionBodies) { SavedRelaxMask = NULL; RelaxIsSaved = false; };
+  Parser(Preprocessor &PP, Sema &Actions, bool SkipFunctionBodies);
   ~Parser();
   
-  const APValue *getSavedRelaxMask() { return SavedRelaxMask; }
-  setSavedRelaxMask(APValue *value) { SavedRelaxMask = value; }
+  APValue *getSavedRelaxMask() { return SavedRelaxMask; }
+  void setSavedRelaxMask(APValue *value) { SavedRelaxMask = value; }
   bool relaxIsSaved() { return RelaxIsSaved; }
-  setRelaxIsSaved(bool isSaved) { RelaxIsSaved = isSaved; }
+  void setRelaxIsSaved(bool isSaved) { RelaxIsSaved = isSaved; }
 
   const LangOptions &getLangOpts() const { return PP.getLangOpts(); }
   const TargetInfo &getTargetInfo() const { return PP.getTargetInfo(); }
