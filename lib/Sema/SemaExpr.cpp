@@ -8732,6 +8732,8 @@ bool Sema::CheckImmediate(Expr *expr) {
 void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPValue){
   uint64_t leftInjectMask, rightInjectMask, injectMask, relaxMask;
   bool leftIsImmediate, rightIsImmediate;
+  APValue *testVal;
+  testVal = NULL;
   leftIsImmediate = CheckImmediate(LHSExpr);
   rightIsImmediate = CheckImmediate(RHSExpr);
   
@@ -8747,17 +8749,33 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
         case(Sema::PPACOILM_Mimic): {
           if(!rightIsImmediate) {
             //left mask mimics right one
-            leftInjectMask = *(getNeglectValue(RHSExpr)->getInt().getRawData());
+            testVal = getNeglectValue(RHSExpr);
+            if(testVal != NULL){
+              leftInjectMask = *(testVal->getInt().getRawData());
+            }
+            else
+              leftInjectMask = 0b1111111; //all precise
+          }
+          else {
+            leftInjectMask = 0b1111111; //all precise
           }
         }
       }
     }
     else {
-      leftInjectMask = *(getNeglectValue(LHSExpr)->getInt().getRawData());
+      testVal = getNeglectValue(LHSExpr);
+      if(testVal!=NULL)
+        leftInjectMask = *(testVal->getInt().getRawData());
+      else
+        leftInjectMask = 0b1111111; //all precise
     }
   }
   else {
-    leftInjectMask = *(LHSExpr->getInjectMask()->getInt().getRawData());
+    testVal = LHSExpr->getInjectMask();
+    if(testVal!=NULL)
+      leftInjectMask = *(testVal->getInt().getRawData());
+    else
+    leftInjectMask = 0b1111111; //all precise
   }
   if(ExprIsLeaf(RHSExpr)) {
     if(rightIsImmediate) {
@@ -8768,17 +8786,32 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
         case(Sema::PPACOILM_Mimic): {
           if(!leftIsImmediate) {
             //right mask mimics left one
-            rightInjectMask = *(getNeglectValue(LHSExpr)->getInt().getRawData());
+            testVal = getNeglectValue(LHSExpr);
+            if(testVal!=NULL)
+              rightInjectMask = *(testVal->getInt().getRawData());
+            else
+              rightInjectMask = 0b1111111; //all precise
+          }
+          else {
+            rightInjectMask = 0b1111111; //all precise
           }
         }
       }
     }
     else {
-      rightInjectMask = *(getNeglectValue(RHSExpr)->getInt().getRawData());
+      testVal = getNeglectValue(RHSExpr);
+      if(testVal!=NULL)
+        rightInjectMask = *(testVal->getInt().getRawData());
+      else
+        rightInjectMask = 0b1111111; //all precise
     }
   }
   else {
-    rightInjectMask = *(RHSExpr->getInjectMask()->getInt().getRawData());
+    testVal = RHSExpr->getInjectMask();
+    if(testVal!=NULL)
+      rightInjectMask = *(testVal->getInt().getRawData());
+    else
+      rightInjectMask = 0b1111111; //all precise
   }
 
   //Compare both variables and assign the injectmask depending on pragma paco comine
@@ -8799,20 +8832,26 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
         Diag(expr->getExprLoc(), diag::err_neglect_not_equal_on_paco_combine_mode_error);
       }
       break;
-    }
-    llvm::APSInt aint = llvm::APSInt(7);
-    aint = injectMask;
-    APValue* result = new APValue(aint);
-    expr->setInjectMask(result);
+  }
+  llvm::APSInt aint = llvm::APSInt(7);
+  aint = injectMask;
+  APValue* result = new APValue(aint);
+  expr->setInjectMask(result);
+  if(relaxAPValue!=NULL) {
     relaxMask = *(relaxAPValue->getInt().getRawData());
-    //Test if injectMask fits into relaxMask
-    if(((relaxMask&injectMask)-injectMask)==0) {
-      expr->setNeglectMask(expr->getInjectMask());
-    }
-    else {
-      Diag(expr->getExprLoc(), diag::err_inject_does_not_fit_into_relax);
-    }
+  }
+  else {
+    relaxMask = 0b1111111; //all precise
+  }
+  //Test if injectMask fits into relaxMask
+  if((relaxMask|injectMask)==relaxMask) {
+    expr->setNeglectMask(expr->getInjectMask());
+  }
+  else {
+    Diag(expr->getExprLoc(), diag::err_inject_does_not_fit_into_relax);
+  }
 }
+
 void Sema::SetMasksBottomUp(Expr *expr, APValue *relaxMask) {
   Expr *LHSExpr;
   Expr *RHSExpr;
@@ -8877,10 +8916,6 @@ ExprResult Sema::CreateBuiltinBinOp(SourceLocation OpLoc,
 
   switch (Opc) {
   case BO_Assign:
-    if(getLangOpts().PACO)
-    {
-      //CheckAssignmentForPACOAndSetNeglectMask(LHSExpr, RHSExpr);
-    }
     ResultTy = CheckAssignmentOperands(LHS.get(), RHS, OpLoc, QualType());
     if (getLangOpts().CPlusPlus &&
         LHS.get()->getObjectKind() != OK_ObjCProperty) {

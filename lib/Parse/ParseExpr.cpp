@@ -207,9 +207,27 @@ ExprResult Parser::ParseAssignmentExpression(TypeCastState isTypeCast) {
                                        isTypeCast);
   APValue* relaxMask = getRelaxValue(LHS.take());
   APValue* neglectMask = getNeglectValue(LHS.take());
-  if(relaxMask != NULL && *(relaxMask->getInt().getRawData()) == 1)
-    LHS.take()->setRelaxMask(neglectMask);
-  return ParseRHSOfBinaryExpression(LHS, prec::Assignment);
+  ExprResult result;
+  if(!relaxIsSaved()) {
+    if(relaxMask != NULL && *(relaxMask->getInt().getRawData()) == 1)
+      LHS.take()->setRelaxMask(neglectMask);
+    else {
+      llvm::APSInt aint = llvm::APSInt(7);
+      aint = 0b1111111;  //all precise
+      relaxMask = aint;
+      LHS.take()->setRelaxMask(neglectMask);
+    }
+    setRelaxIsSaved(true);
+    setSavedRelaxMask(relaxMask);
+    result = ParseRHSOfBinaryExpression(LHS, prec::Assignment);
+    setSavedRelaxMask(NULL);
+    setRelaxIsSaved(false);
+  }
+  else {
+    LHS.take()->setRelaxMask(getSavedRelaxMask());
+    result = ParseRHSOfBinaryExpression(LHS, prec::Assignment);
+  }
+  return result;
 }
 
 /// \brief Parse an assignment expression where part of an Objective-C message
