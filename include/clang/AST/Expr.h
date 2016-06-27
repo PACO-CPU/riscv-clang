@@ -146,17 +146,14 @@ public:
   
   APValue *getNeglectMask() const { return neglectMask; }
   void setNeglectMask(APValue *mask) {
-    //TODOPACO: add assert if value is not correct
     neglectMask = mask;
   }
   APValue *getInjectMask() { return injectMask; }
   void setInjectMask(APValue *mask) {
-    //TODOPACO: add assert if value is not correct
     injectMask = mask;
   }
   APValue *getRelaxMask() { return relaxMask; }
   void setRelaxMask(APValue *mask) {
-    //TODOPACO: add assert if value is not correct
     relaxMask = mask;
   }
   Expr *getPACOLHS() { return PACOLHS; }

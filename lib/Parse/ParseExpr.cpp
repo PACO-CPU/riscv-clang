@@ -154,43 +154,6 @@ Parser::ParseExpressionWithLeadingExtension(SourceLocation ExtLoc) {
   return ParseRHSOfBinaryExpression(LHS, prec::Comma);
 }
 
-ApproxDecoratorDecl *Parser::getApproxDecl(Expr *expr) {
-  if (DeclRefExpr *DRE = dyn_cast<DeclRefExpr>(expr->IgnoreParens())) {
-    if (VarDecl *Var = dyn_cast<VarDecl>(DRE->getDecl())) {
-      return Var->GetApproxDecorator();
-    }
-  }
-  return NULL;
-}
-
-APValue *Parser::getApproxKeyValue(Expr *expr, const char* keyIdent) {
-  ApproxDecoratorDecl *ApproxDecl = getApproxDecl(expr);
-  APValue *result = NULL;
-  if(ApproxDecl != NULL) {
-    const std::vector<ApproxDecoratorDecl::KeyValue*> KeyValues = ApproxDecl->getKeyValues();
-
-    for(std::vector<ApproxDecoratorDecl::KeyValue*>::size_type i = 0; i != KeyValues.size(); i++) {
-      if (StringRef(KeyValues[i]->getIdent()).compare(keyIdent) == 0) {
-          result = new APValue(KeyValues[i]->getNum());
-      }
-    }
-  }
-  return result;
-}
-
-APValue *Parser::getNeglectValue(Expr *expr) {
-  APValue * neglectValue = getApproxKeyValue(expr, "neglect");
-  APValue *maskValue = getApproxKeyValue(expr, "mask");
-  if(neglectValue != NULL)
-    return neglectValue;
-  else
-    return maskValue;
-}
-
-APValue *Parser::getRelaxValue(Expr *expr) {
-  return getApproxKeyValue(expr, "relax");
-}
-
 /// \brief Parse an expr that doesn't include (top-level) commas.
 ExprResult Parser::ParseAssignmentExpression(TypeCastState isTypeCast) {
   if (Tok.is(tok::code_completion)) {
@@ -205,8 +168,8 @@ ExprResult Parser::ParseAssignmentExpression(TypeCastState isTypeCast) {
   ExprResult LHS = ParseCastExpression(/*isUnaryExpression=*/false,
                                        /*isAddressOfOperand=*/false,
                                        isTypeCast);
-  APValue* relaxMask = getRelaxValue(LHS.take());
-  APValue* neglectMask = getNeglectValue(LHS.take());
+  APValue* relaxMask = Actions.getRelaxValue(LHS.take());
+  APValue* neglectMask = Actions.getNeglectValue(LHS.take());
   ExprResult result;
   if(!relaxIsSaved()) {
     if(relaxMask != NULL && *(relaxMask->getInt().getRawData()) == 1)

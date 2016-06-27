@@ -41,8 +41,6 @@
 #include "clang/Sema/ScopeInfo.h"
 #include "clang/Sema/SemaFixItUtils.h"
 #include "clang/Sema/Template.h"
-#include <string.h>
-#include <stdio.h>
 using namespace clang;
 using namespace sema;
 
@@ -8685,54 +8683,7 @@ APValue *Sema::getRelaxValue(Expr *expr) {
   return getApproxKeyValue(expr, "relax");
 }
 
-bool Sema::CheckRHSApprox(Expr *expr) {
-  APValue* neglectValue = getNeglectValue(expr);
-  APValue* injectValue = getInjectValue(expr);
-  if(ExprIsLeaf(expr) && neglectValue!=NULL && *(neglectValue->getInt().getRawData()) > 0 && injectValue != NULL && *(injectValue->getInt().getRawData()) > 0) {
-    return true;
-  }
-  else {
-    Expr *LHSExpr;
-    Expr *RHSExpr;
-    LHSExpr = expr->getPACOLHS();
-    RHSExpr = expr->getPACORHS();
-    if(LHSExpr != NULL) {
-      if(RHSExpr != NULL) {
-        return CheckRHSApprox(LHSExpr) | CheckRHSApprox(RHSExpr);
-      }
-      else {
-        return CheckRHSApprox(LHSExpr);
-      }
-    }
-    else {
-      if(RHSExpr != NULL) {
-        return CheckRHSApprox(RHSExpr);
-      }
-      else {
-        return false;
-      }
-    }
-  }
-}
-
-void Sema::CheckAssignmentForPACOAndSetNeglectMask(Expr *LHSExpr, Expr *RHSExpr) {
-  APValue *neglectAssignment = getNeglectValue(LHSExpr);
-  APValue *relaxAssignment = getRelaxValue(LHSExpr);
-  //If neglectAssignment exists, so LHSExpr is approx
-  if(neglectAssignment != NULL && relaxAssignment != NULL && *(relaxAssignment->getInt().getRawData()) != 0) {
-    SetMasksBottomUp(RHSExpr, neglectAssignment);
-  }
-  else {
-    //RHS is Approx, throw error
-    if(CheckRHSApprox(RHSExpr)) {
-      Diag(RHSExpr->getExprLoc(), diag::err_lhs_cannot_contain_approx_data);
-    }
-    //If both sides are precise, do nothing
-  }
-}
-
 bool Sema::CheckImmediate(Expr *expr) {
-  //TODOPACO: figure out if there is a better way to test if expr contains immediate value
   if(IntegerLiteral* test = dyn_cast<IntegerLiteral>(expr))
     return true;
   else
@@ -8862,19 +8813,6 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
   }
 }
 
-void Sema::SetMasksBottomUp(Expr *expr, APValue *relaxMask) {
-  Expr *LHSExpr;
-  Expr *RHSExpr;
-  LHSExpr = expr->getPACOLHS();
-  RHSExpr = expr->getPACORHS();
-  if (LHSExpr != NULL && RHSExpr != NULL) {
-    if(!(ExprIsLeaf(LHSExpr) && ExprIsLeaf(RHSExpr))) {
-      SetMasksBottomUp(LHSExpr, relaxMask);
-      SetMasksBottomUp(RHSExpr, relaxMask);
-    }
-    SetMasks(expr, LHSExpr, RHSExpr, relaxMask);
-  }
-}
 bool Sema::ExprIsLeaf(Expr *expr) {
   Expr *LHSExpr;
   Expr *RHSExpr;
