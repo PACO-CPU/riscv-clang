@@ -17,7 +17,6 @@
 #include "clang/AST/StmtVisitor.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/IR/Constants.h"
-#include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/Function.h"
 using namespace clang;
 using namespace CodeGen;
@@ -227,7 +226,6 @@ public:
   ComplexPairTy EmitBinDiv(const BinOpInfo &Op);
 
   ComplexPairTy VisitBinAdd(const BinaryOperator *E) {
-    llvm::Value *F = CGF.CGM.getIntrinsic(llvm::Intrinsic::riscv_add_approx);
     return EmitBinAdd(EmitBinOps(E));
   }
   ComplexPairTy VisitBinSub(const BinaryOperator *E) {
