@@ -42,6 +42,10 @@
 using namespace clang;
 
 ApproxDecoratorDecl::KeyValue *ConvertNeglectToMask(ApproxDecoratorDecl::KeyValue *Key) {
+  //TODOPACO: Add interpretation from 101 to 0b101
+}
+
+ApproxDecoratorDecl::KeyValue *ConvertNeglectToMask(ApproxDecoratorDecl::KeyValue *Key) {
   APValue newValue;
   llvm::APSInt aint = llvm::APSInt(7);
   aint = 0b1111111;
@@ -174,6 +178,8 @@ Decl *Sema::ActOnApproxDecorator(
     if (CheckApproxKeyVaule(ApproxLoc, ADec->getKeyValues(), keyvalues[i])) {
       if(StringRef(keyvalues[i]->getIdent()).compare("neglect") == 0) {
         keyvalues[i] = ConvertNeglectToMask(keyvalues[i]);
+      } else if (StringRef(keyvalues[i]->getIdent()).compare("mask") == 0) {
+        keyvalues[i] = ConvertMaskValueToBinaryMask(keyvalues[i]);
       } else if (StringRef(keyvalues[i]->getIdent()).compare("relax") == 0) {
         has_relax = true;
       }

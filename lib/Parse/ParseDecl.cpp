@@ -5681,46 +5681,50 @@ Decl *Parser::ParseApproxDecorator(SourceLocation &DeclEnd) {
   ApproxDecoratorDecl::KeyValue *keyvalue;
 
   SmallVector<ApproxDecoratorDecl::KeyValue*, 8> keyvalues;
+  SourceLocation ApproxLoc;
+  
+  while(Tok.is(tok::kw_approx)) {
 
-  // Eat 'approx' and '('.
-  SourceLocation ApproxLoc=ConsumeToken();
-  ExpectAndConsume(tok::l_paren,diag::err_expected_lparen,"",tok::l_paren);
+    // Eat 'approx' and '('.
+    ApproxLoc=ConsumeToken();
+    ExpectAndConsume(tok::l_paren,diag::err_expected_lparen,"",tok::l_paren);
 
-  while (!Tok.is(tok::r_paren)) {
-    // expect an identifier
-    if (!Tok.is(tok::identifier)) {
-      Diag(Tok,diag::err_expected_ident_rparen);
-      // todo: figure out what the second and third arguments do:
-      // todo: look for a parenthesis-balancing version
-      SkipUntil(tok::r_paren,true,true); 
-      return 0;
+    while (!Tok.is(tok::r_paren)) {
+      // expect an identifier
+      if (!Tok.is(tok::identifier)) {
+        Diag(Tok,diag::err_expected_ident_rparen);
+        // todo: figure out what the second and third arguments do:
+        // todo: look for a parenthesis-balancing version
+        SkipUntil(tok::r_paren,true,true); 
+        return 0;
+      }
+      inf_ident=Tok.getIdentifierInfo();
+      ConsumeToken();
+
+      // Eat '='
+      if (
+        ExpectAndConsume(
+          tok::equal,diag::err_expected_equal_after,"",tok::r_paren)) 
+        return 0;
+
+      // parse value
+      //   we assume this is either a string literal or an expression that 
+      //   is evaluable to a constant of type int/float or their complex
+      //   counterpart.
+      
+      SourceLocation exprLoc=Tok.getLocation();
+      if (Tok.is(tok::string_literal)) {
+        expr=ParseStringLiteralExpression(true);
+      } else {
+        expr=ParseExpression();
+      }
+
+      keyvalue=Actions.ActOnApproxDecoratorKeyValue(inf_ident,expr,exprLoc);
+      if (keyvalue!=NULL)
+        keyvalues.push_back(keyvalue);
     }
-    inf_ident=Tok.getIdentifierInfo();
-    ConsumeToken();
-
-    // Eat '='
-    if (
-      ExpectAndConsume(
-        tok::equal,diag::err_expected_equal_after,"",tok::r_paren)) 
-      return 0;
-
-    // parse value
-    //   we assume this is either a string literal or an expression that 
-    //   is evaluable to a constant of type int/float or their complex
-    //   counterpart.
-    
-    SourceLocation exprLoc=Tok.getLocation();
-    if (Tok.is(tok::string_literal)) {
-      expr=ParseStringLiteralExpression(true);
-    } else {
-      expr=ParseExpression();
-    }
-
-    keyvalue=Actions.ActOnApproxDecoratorKeyValue(inf_ident,expr,exprLoc);
-    if (keyvalue!=NULL)
-      keyvalues.push_back(keyvalue);
+    ConsumeParen();
   }
-  ConsumeParen();
 
   return Actions.ActOnApproxDecorator(
     getCurScope(),ApproxLoc,keyvalues.data(),keyvalues.size());
