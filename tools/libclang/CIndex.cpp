@@ -4481,7 +4481,7 @@ CXCursor clang_getCursorDefinition(CXCursor C) {
   case Decl::ClassScopeFunctionSpecialization:
   case Decl::Import:
   case Decl::OMPThreadPrivate:
-  case Decl::ApproxDecorator:
+  case Decl::ApproxDecorator: //PACO extension.
     return C;
 
   // Declaration kinds that don't make any sense here, but are
