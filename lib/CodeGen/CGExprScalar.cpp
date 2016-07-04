@@ -2401,18 +2401,21 @@ Value *ScalarExprEmitter::EmitAdd(const BinOpInfo &op) {
       return Builder.CreateAdd(op.LHS, op.RHS, "add");
     case LangOptions::SOB_Undefined:
       if (!CGF.SanOpts->SignedIntegerOverflow) {
+	// PACO: Creating the approx add node      
         if (op.E->getNeglectMask()) {
           uint32_t neglectVal = op.E->getNeglectMask()->getInt()
                                 .getZExtValue();
-          if (neglectVal != 0b1111111) {  
+          // Is this neglect mask not precise?
+	  if (neglectVal != 0b1111111) {  
             neglectVal = neglectVal >> 1; /* the last bit is implicit */
             llvm::ConstantInt *constInt = Builder.getInt32(neglectVal);
             return Builder.CreateCall3(CGF.CGM.getIntrinsic(
                                        llvm::Intrinsic::riscv_add_approx), 
                                        op.LHS, op.RHS, constInt);
           } 
-          return Builder.CreateNSWAdd(op.LHS, op.RHS, "add");
         }
+	// PACO: Modification End
+        return Builder.CreateNSWAdd(op.LHS, op.RHS, "add");
      }
       // Fall through.
     case LangOptions::SOB_Trapping:
@@ -2443,9 +2446,11 @@ Value *ScalarExprEmitter::EmitSub(const BinOpInfo &op) {
         return Builder.CreateSub(op.LHS, op.RHS, "sub");
       case LangOptions::SOB_Undefined:
         if (!CGF.SanOpts->SignedIntegerOverflow) {
-          if (op.E->getNeglectMask()) {
+          // PACO: Creating the approx sub node
+	  if (op.E->getNeglectMask()) {
             uint32_t neglectVal = op.E->getNeglectMask()->getInt()
                                     .getZExtValue();
+	    // Is this neglect mask not precise?
             if (neglectVal != 0b1111111) {
               neglectVal = neglectVal >> 1; /* the last bit is implicit */
               llvm::ConstantInt *constInt = Builder.getInt32(neglectVal);
@@ -2454,6 +2459,7 @@ Value *ScalarExprEmitter::EmitSub(const BinOpInfo &op) {
                                          op.LHS, op.RHS, constInt);
             } 
           }
+	  // PACO: End of modification
           return Builder.CreateNSWSub(op.LHS, op.RHS, "sub");
           
         }
