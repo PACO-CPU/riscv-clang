@@ -41,8 +41,22 @@
 
 using namespace clang;
 
-ApproxDecoratorDecl::KeyValue *ConvertNeglectToMask(ApproxDecoratorDecl::KeyValue *Key) {
-  //TODOPACO: Add interpretation from 101 to 0b101
+ApproxDecoratorDecl::KeyValue *ConvertMaskValueToBinaryMask(ApproxDecoratorDecl::KeyValue *Key) {
+  // Interpretes e.g. 101 as 0b101
+  APValue newValue;
+  llvm::APSInt aint = llvm::APSInt(7);
+  uint64_t KeyData = *(Key->getNum().getInt().getRawData());
+  int i = 1;
+  int res = 0;
+  aint = 0;
+  while(KeyData!=0) {
+    res = res + i * (KeyData%10);
+    KeyData = KeyData/10;
+    i = i*2;
+  }
+  aint = res;
+  newValue = APValue(aint);
+  return new ApproxDecoratorDecl::KeyValue(Key->getIdent(),newValue);
 }
 
 ApproxDecoratorDecl::KeyValue *ConvertNeglectToMask(ApproxDecoratorDecl::KeyValue *Key) {
