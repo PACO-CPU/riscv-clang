@@ -5690,6 +5690,23 @@ Decl *Parser::ParseApproxDecorator(SourceLocation &DeclEnd) {
     ExpectAndConsume(tok::l_paren,diag::err_expected_lparen,"",tok::l_paren);
 
     while (!Tok.is(tok::r_paren)) {
+    
+      if(PP.getSpelling(Tok).compare("strategy") == 0) {
+	Token tokiMoki = Tok;
+	int index = 3;
+	printf("int ");
+	while(!tokiMoki.is(tok::r_brace)) {               
+	  tokiMoki = PP.LookAhead(index);
+	  printf(PP.getSpelling(tokiMoki).data());
+	  printf(" ");
+	  if(tokiMoki.is(tok::semi) or tokiMoki.is(tok::l_brace))
+	    printf("\n");
+	  //tokiMoki = PP.LookAhead(index);
+	  index++;
+	}
+	//ConsumeAnyToken();
+	//return 0;
+      }
       // expect an identifier
       if (!Tok.is(tok::identifier)) {
         Diag(Tok,diag::err_expected_ident_rparen);

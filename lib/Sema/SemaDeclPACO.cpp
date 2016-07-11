@@ -171,7 +171,12 @@ bool Sema::CheckApproxKeyVaule(SourceLocation ApproxLoc,
             return true;
         }
       }
-    } else {
+    } 
+      else if(identName.compare("strategy") == 0) {
+       	    //string someString("This is the lut and no error");
+	      //printf("%s\n", "This is lut");
+	          }
+      else {
       Diag(ApproxLoc,diag::err_approx_keyvalue_not_valid);
       return false;
     }
