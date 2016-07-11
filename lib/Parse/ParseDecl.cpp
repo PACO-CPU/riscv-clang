@@ -2290,6 +2290,8 @@ void Parser::ParseAlignmentSpecifier(ParsedAttributes &Attrs,
                ArgExprs.data(), 1, AttributeList::AS_Keyword, EllipsisLoc);
 }
 
+Token preApprox;
+
 /// ParseDeclarationSpecifiers
 ///       declaration-specifiers: [C99 6.7]
 ///         storage-class-specifier declaration-specifiers[opt]
@@ -2881,6 +2883,17 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
                                      DiagID);
       break;
     case tok::kw_int:
+      printf("1erster");
+      for(int i1= 0; i1 < 3;i1++)
+      {
+        bool testiBesti = false;
+	Token tokiBoki = PP.LookAhead(i1);
+	if(tokiBoki.is(tok::kw_approx))
+	{
+	  preApprox = Tok;
+ 	  printf("I succeed!");
+	}
+      }
       isInvalid = DS.SetTypeSpecType(DeclSpec::TST_int, Loc, PrevSpec,
                                      DiagID);
       break;
@@ -3860,7 +3873,7 @@ bool Parser::isApproxDecorator() const {
 /// specifier or if we're not sure.
 bool Parser::isKnownToBeTypeSpecifier(const Token &Tok) const {
   switch (Tok.getKind()) {
-  default: return false;
+  desKnownToBeTypeSpecifierfault: return false;
     // type-specifiers
   case tok::kw_short:
   case tok::kw_long:
@@ -5694,7 +5707,7 @@ Decl *Parser::ParseApproxDecorator(SourceLocation &DeclEnd) {
       if(PP.getSpelling(Tok).compare("strategy") == 0) {
 	Token tokiMoki = Tok;
 	int index = 3;
-	printf("int ");
+	printf(PP.getSpelling(preApprox).data());
 	while(!tokiMoki.is(tok::r_brace)) {               
 	  tokiMoki = PP.LookAhead(index);
 	  printf(PP.getSpelling(tokiMoki).data());
