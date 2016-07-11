@@ -2927,6 +2927,48 @@ RValue CodeGenFunction::EmitRValueForField(LValue LV,
 
 RValue CodeGenFunction::EmitCallExpr(const CallExpr *E, 
                                      ReturnValueSlot ReturnValue) {
+  // PACO additions
+  const FunctionDecl *FD = E->getDirectCallee();
+  if(FD!=NULL) {
+    const ApproxDecoratorDecl *AD = FD->GetApproxDecorator();
+    if(AD!=NULL) {
+      //TODOPACO: Add code to emit approx function code here
+      //TODOPACO: Do not forget to emit the lutc function in emitdecl function
+      std::vector<ApproxDecoratorDecl::KeyValue*> KVs = AD->getKeyValues();
+      for(size_t i=0;i<KVs.size();i++) {
+        if((StringRef((KVs[i]->getIdent()))).compare("strategy") == 0) {
+          // Different strategies //TODOPACO: is this needed?
+          if(KVs[i]->getStr().compare("uniform") == 0) {
+            // Emit 
+            return RValue::get(0);//TODOPACO: figure out how to get input ops and output ops: Builder.CreateCall4(CGM.getIntrinsic(
+                //llvm::Intrinsic::riscv_add_approx/*riscv_lute*/ /*is this correct?*/), op1, op2, op3, constInt, FD.getName()->getStr().cstr()); //TODOPACO all correct?
+          } else if ((StringRef(KVs[i]->getStr())).compare("log_left") == 0) {
+            return RValue::get(0);//TODOPACO: 
+          } else if ((StringRef(KVs[i]->getStr())).compare("log_right") == 0) {
+            return RValue::get(0);//TODOPACO: 
+          } else if ((StringRef(KVs[i]->getStr())).compare("weighted") == 0) {
+            return RValue::get(0);//TODOPACO: 
+          } else if ((StringRef(KVs[i]->getStr())).compare("min_error") == 0) {
+            return RValue::get(0);//TODOPACO: 
+          } else if ((StringRef(KVs[i]->getStr())).compare("min_error_weighted") == 0) {
+            return RValue::get(0);//TODOPACO: 
+          } else if ((StringRef(KVs[i]->getStr())).compare("explicit_segments") == 0) {
+            return RValue::get(0);//TODOPACO: 
+          } else if ((StringRef(KVs[i]->getStr())).compare("interpolated") == 0) {
+            return RValue::get(0);//TODOPACO: 
+          } else if ((StringRef(KVs[i]->getStr())).compare("min_error_2?") == 0) {//TODOPACO: correct?
+            return RValue::get(0);//TODOPACO: 
+          } else if((StringRef(KVs[i]->getStr())).compare("min_error_weighted2?") == 0) {//TODOPACO: correct?
+            return RValue::get(0);//TODOPACO: 
+          } else {
+            return RValue::get(0);//TODOPACO: Error case?
+          }
+        }
+      }
+      
+    }
+  }
+  // PACO end
   if (CGDebugInfo *DI = getDebugInfo()) {
     SourceLocation Loc = E->getLocStart();
     // Force column info to be generated so we can differentiate

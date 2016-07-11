@@ -86,6 +86,7 @@ void CodeGenFunction::EmitDecl(const Decl &D) {
   case Decl::Import:
   case Decl::OMPThreadPrivate:
   case Decl::Empty:
+  case Decl::ApproxDecorator: //PACO decl also do not need to be emited
     // None of these decls require codegen support.
     return;
 

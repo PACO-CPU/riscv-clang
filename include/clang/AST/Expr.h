@@ -164,6 +164,13 @@ public:
   void setPACORHS(Expr *expr) {
     PACORHS = expr;
   }
+  void copyPACOValues(Expr *expr) {
+    neglectMask = expr->getNeglectMask();
+    injectMask = expr->getInjectMask();
+    relaxMask = expr->getRelaxMask();
+    PACOLHS = expr->getPACOLHS();
+    PACORHS = expr->getPACORHS();
+  }
 
   /// isValueDependent - Determines whether this expression is
   /// value-dependent (C++ [temp.dep.constexpr]). For example, the

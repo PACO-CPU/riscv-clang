@@ -1037,6 +1037,8 @@ CallExpr::CallExpr(ASTContext& C, StmtClass SC, Expr *fn, unsigned NumPreArgs,
          fn->isInstantiationDependent(),
          fn->containsUnexpandedParameterPack()),
     NumArgs(args.size()) {
+  // CopyPACOValues to use function result in approx computations: e.g. int i=i+foo();
+  copyPACOValues(getCallee());
 
   SubExprs = new (C) Stmt*[args.size()+PREARGS_START+NumPreArgs];
   SubExprs[FN] = fn;
