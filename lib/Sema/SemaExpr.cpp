@@ -8652,9 +8652,9 @@ ApproxDecoratorDecl *Sema::getApproxDecl(Expr *expr) {
     }
   }
   else if(CallExpr *CE = dyn_cast<CallExpr>(expr->IgnoreParens())) {
-    //if (VarDecl *Var = dyn_cast<VarDecl>((dyn_cast<DeclRefExpr>(CE->getCallee))->getDecl())) {
-    //  return Var->GetApproxDecorator();
-    //}
+    if (VarDecl *Var = dyn_cast<VarDecl>((dyn_cast<DeclRefExpr>((CE->getCallee())))->getDecl())) {
+      return Var->GetApproxDecorator();
+    }
   }
   return NULL;
 }
