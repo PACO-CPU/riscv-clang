@@ -2930,7 +2930,7 @@ RValue CodeGenFunction::EmitCallExpr(const CallExpr *E,
   // PACO additions
   const FunctionDecl *FD = E->getDirectCallee();
   if(FD!=NULL) {
-    const ApproxDecoratorDecl *AD = FD->GetApproxDecorator();
+    ApproxDecoratorDecl *AD = FD->GetApproxDecorator();
     if(AD!=NULL) {
       //TODOPACO: Add code to emit approx function code here
       //TODOPACO: Do not forget to emit the lutc function in emitdecl function

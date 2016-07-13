@@ -1275,6 +1275,10 @@ Sema::SemaBuiltinAtomicOverloaded(ExprResult TheCallResult) {
   // is arbitrary, but the codegen for these builtins ins design to handle it
   // gracefully.
   TheCall->setType(ResultType);
+  
+  // PACO, copy approx decorator from old to new FuctionDecl
+  NewBuiltinDecl->SetApproxDecorator(FDecl->GetApproxDecorator());
+  // end PACO
 
   return TheCallResult;
 }

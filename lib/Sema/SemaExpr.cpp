@@ -8652,8 +8652,17 @@ ApproxDecoratorDecl *Sema::getApproxDecl(Expr *expr) {
     }
   }
   else if(CallExpr *CE = dyn_cast<CallExpr>(expr->IgnoreParens())) {
-    if (VarDecl *Var = dyn_cast<VarDecl>((dyn_cast<DeclRefExpr>((CE->getCallee())))->getDecl())) {
-      return Var->GetApproxDecorator();
+    Expr *ex = CE->getCallee()->IgnoreParenCasts();
+    
+    if (ex!=NULL) {
+      if(DeclRefExpr *DRE = (dyn_cast<DeclRefExpr>(ex))) {
+        if(DRE!=NULL) {
+          Decl *aDecl = DRE->getDecl();
+          if(NamedDecl *Var = dyn_cast<NamedDecl>(aDecl)){
+            return Var->GetApproxDecorator();
+          }
+        }
+      }
     }
   }
   return NULL;
@@ -8711,6 +8720,7 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
       switch(PACOIntermediateLiteralMode){
         case(Sema::PPACOILM_Precise): {
           leftInjectMask = 0b1111111; //all precise
+          break;
         }
         case(Sema::PPACOILM_Mimic): {
           if(!rightIsImmediate) {
@@ -8725,6 +8735,7 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
           else {
             leftInjectMask = 0b1111111; //all precise
           }
+          break;
         }
       }
     }
@@ -8748,6 +8759,7 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
       switch(PACOIntermediateLiteralMode){
         case(Sema::PPACOILM_Precise): {
           rightInjectMask = 0b1111111; //all precise
+          break;
         }
         case(Sema::PPACOILM_Mimic): {
           if(!leftIsImmediate) {
@@ -8761,6 +8773,7 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
           else {
             rightInjectMask = 0b1111111; //all precise
           }
+          break;
         }
       }
     }

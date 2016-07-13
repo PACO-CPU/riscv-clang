@@ -201,7 +201,7 @@ public:
 
   void SetApproxDecorator (ApproxDecoratorDecl *approx);
   ApproxDecoratorDecl *GetApproxDecorator();
-  const ApproxDecoratorDecl *GetApproxDecorator() const {return const_cast<ApproxDecoratorDecl*>((this)->GetApproxDecorator());};
+  ApproxDecoratorDecl *GetApproxDecorator() const {return (const_cast<NamedDecl*>(this)->GetApproxDecorator());};
 
   /// getIdentifier - Get the identifier that names this declaration,
   /// if there is one. This will return NULL if this declaration has
