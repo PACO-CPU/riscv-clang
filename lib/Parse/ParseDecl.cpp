@@ -2883,7 +2883,7 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
                                      DiagID);
       break;
     case tok::kw_int:
-      printf("1erster");
+      //TODO: Need to extend this!
       for(int i1= 0; i1 < 3;i1++)
       {
         bool testiBesti = false;
@@ -2891,7 +2891,6 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
 	if(tokiBoki.is(tok::kw_approx))
 	{
 	  preApprox = Tok;
- 	  printf("I succeed!");
 	}
       }
       isInvalid = DS.SetTypeSpecType(DeclSpec::TST_int, Loc, PrevSpec,
@@ -5702,23 +5701,106 @@ Decl *Parser::ParseApproxDecorator(SourceLocation &DeclEnd) {
     ApproxLoc=ConsumeToken();
     ExpectAndConsume(tok::l_paren,diag::err_expected_lparen,"",tok::l_paren);
 
-    while (!Tok.is(tok::r_paren)) {
-    
-      if(PP.getSpelling(Tok).compare("strategy") == 0) {
-	Token tokiMoki = Tok;
-	int index = 3;
-	printf(PP.getSpelling(preApprox).data());
-	while(!tokiMoki.is(tok::r_brace)) {               
-	  tokiMoki = PP.LookAhead(index);
-	  printf(PP.getSpelling(tokiMoki).data());
-	  printf(" ");
-	  if(tokiMoki.is(tok::semi) or tokiMoki.is(tok::l_brace))
-	    printf("\n");
-	  //tokiMoki = PP.LookAhead(index);
-	  index++;
-	}
-	//ConsumeAnyToken();
-	//return 0;
+    while (!Tok.is(tok::r_paren))
+    {
+      if(PP.getSpelling(Tok).compare("strategy") == 0) 
+      {
+        Token tokiMoki = Tok;
+        int index = 1;
+	std::string numSegments = "";
+	std::string bounds = "";
+	std::string segments = "";
+	std::string approximation = "";
+	std::string value = "";
+	std::string value2 = "";
+	std::string value3 = "";
+	std::string value4 = "";
+        while(!tokiMoki.is(tok::r_paren))
+	{
+	      if(PP.getSpelling(tokiMoki).compare("numSegments") == 0 )
+	      {
+		numSegments = PP.getSpelling(tokiMoki).data();
+		index++;                 
+		tokiMoki = PP.LookAhead(index); 
+		if(!tokiMoki.is(tok::equal))     
+		{
+		  printf("Error");       
+		}
+		index++;                 
+		tokiMoki = PP.LookAhead(index); 
+                value = PP.getSpelling(tokiMoki).data();
+	      }
+	      if(PP.getSpelling(tokiMoki).compare("bounds") == 0 )
+	      {
+	        bounds = PP.getSpelling(tokiMoki).data();
+
+		index++;                 
+		tokiMoki = PP.LookAhead(index); 
+		if(!tokiMoki.is(tok::equal))     
+		{
+		 printf("Error");
+		}
+		index++;
+		tokiMoki = PP.LookAhead(index); 
+                value2 = PP.getSpelling(tokiMoki).data();
+	      }
+	      if(PP.getSpelling(tokiMoki).compare("segments") == 0 )
+	      {
+		segments = PP.getSpelling(tokiMoki).data();
+		index++;                 
+		tokiMoki = PP.LookAhead(index); 
+		if(!tokiMoki.is(tok::equal))     
+		{
+		  printf("Error");
+		}
+		index++;
+		tokiMoki = PP.LookAhead(index);
+		value3 = PP.getSpelling(tokiMoki).data();
+	      }
+	      if(PP.getSpelling(tokiMoki).compare("approximation") == 0 )
+	      {
+	        approximation = PP.getSpelling(tokiMoki).data();
+		index++;                 
+		tokiMoki = PP.LookAhead(index); 
+		if(!tokiMoki.is(tok::equal))     
+		{
+		  printf("Error");
+		}
+		index++;
+		tokiMoki = PP.LookAhead(index);
+		value4 = PP.getSpelling(tokiMoki).data();
+	      }
+	      index++;                   
+	      tokiMoki = PP.LookAhead(index); 
+	    }   
+	      index++;                   
+	      tokiMoki = PP.LookAhead(index); 
+	 //return name                
+	    std::string ret;
+        ret	= PP.getSpelling(preApprox).data();
+	std::string name;
+        name	= PP.getSpelling(tokiMoki).data();
+	index++;
+	tokiMoki = PP.LookAhead(index); 
+	//Keyvalues
+	printf("name = \"%s\"\n", name.c_str());
+	printf("%s = \"%s\"\n", numSegments.c_str(), value.c_str());
+	printf("%s = %s\n", bounds.c_str(), value2.c_str());
+	printf("%s = %s\n", segments.c_str(), value3.c_str());
+	printf("%s = %s\n", approximation.c_str(), value4.c_str());
+	printf("\n%%%%\n\n%s %s -> %s\n\n%%%%\n\n\n", name.c_str(), ret.c_str(), ret.c_str());
+	printf("%s %s",ret.c_str(),name.c_str());
+	while(!tokiMoki.is(tok::r_brace)) {
+	 tokiMoki = PP.LookAhead(index); 
+	printf(PP.getSpelling(tokiMoki).data());
+	printf(" ");
+	if(tokiMoki.is(tok::semi) or tokiMoki.is(tok::l_brace))
+	{ 
+	  printf("\n");            
+	} 
+	tokiMoki = PP.LookAhead(index);
+	          index++;
+	} 
       }
       // expect an identifier
       if (!Tok.is(tok::identifier)) {
@@ -5759,3 +5841,4 @@ Decl *Parser::ParseApproxDecorator(SourceLocation &DeclEnd) {
   return Actions.ActOnApproxDecorator(
     getCurScope(),ApproxLoc,keyvalues.data(),keyvalues.size());
 }
+
