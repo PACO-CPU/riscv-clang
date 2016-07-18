@@ -2244,7 +2244,8 @@ private:
   //===--------------------------------------------------------------------===//
   // PACO approx decorator
 
-  Decl *ParseApproxDecorator(SourceLocation &DeclEnd);
+  Decl *ParseApproxDecorator(SourceLocation &DeclEnd, DeclSpec &DS, const char *&PrevSpec,
+                               unsigned &DiagID, bool *isInvalid);
 
   //===--------------------------------------------------------------------===//
   // Preprocessor code-completion pass-through

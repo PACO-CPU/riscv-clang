@@ -45,6 +45,7 @@
 #include <algorithm>
 #include <cstring>
 #include <functional>
+#include <cstdio>
 using namespace clang;
 using namespace sema;
 

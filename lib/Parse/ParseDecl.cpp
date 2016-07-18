@@ -1381,9 +1381,6 @@ Parser::DeclGroupPtrTy Parser::ParseDeclaration(StmtVector &Stmts,
     ProhibitAttributes(attrs);
     SingleDecl = ParseStaticAssertDeclaration(DeclEnd);
     break;
-  case tok::kw_approx:
-    SingleDecl=ParseApproxDecorator(DeclEnd);
-    break;
   default:
     return ParseSimpleDeclaration(Stmts, Context, DeclEnd, attrs, true);
   }
@@ -3111,7 +3108,7 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
       if (!getLangOpts().PACO)
         goto DoneWithDeclSpec;
 
-      decl=ParseApproxDecorator(locEnd);
+      decl=ParseApproxDecorator(locEnd, DS, PrevSpec, DiagID, &isInvalid);
 
       // todo: figure out if this is the correct action to take in case of 
       // error.
@@ -5684,7 +5681,8 @@ bool Parser::TryAltiVecTokenOutOfLine(DeclSpec &DS, SourceLocation Loc,
   return false;
 }
 
-Decl *Parser::ParseApproxDecorator(SourceLocation &DeclEnd) {
+Decl *Parser::ParseApproxDecorator(SourceLocation &DeclEnd, DeclSpec &DS, const char *&PrevSpec,
+                               unsigned &DiagID, bool *isInvalid) {
  
   assert(Tok.is(tok::kw_approx));
   printf("approx\n");
@@ -5836,6 +5834,13 @@ Decl *Parser::ParseApproxDecorator(SourceLocation &DeclEnd) {
         keyvalues.push_back(keyvalue);
     }
     ConsumeParen();
+    // Parse int between approx
+    if(Tok.is(tok::kw_int) && PP.LookAhead(0).is(tok::kw_approx)) {
+      *isInvalid = DS.SetTypeSpecType(DeclSpec::TST_int, Tok.getLocation(), PrevSpec,
+                                     DiagID);
+      // Consume int between approx
+      ConsumeToken();
+    }
   }
 
   return Actions.ActOnApproxDecorator(
