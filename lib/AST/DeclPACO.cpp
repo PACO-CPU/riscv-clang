@@ -26,7 +26,7 @@ using namespace clang;
 ApproxDecoratorDecl::ApproxDecoratorDecl(
   DeclContext *DC, SourceLocation StartLoc) :
   Decl(ApproxDecorator,DC,StartLoc) {
-
+  _lutId = "";
 }
 
 ApproxDecoratorDecl *ApproxDecoratorDecl::Create(

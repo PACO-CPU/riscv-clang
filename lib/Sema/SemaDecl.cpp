@@ -44,7 +44,7 @@
 #include "llvm/ADT/Triple.h"
 #include <algorithm>
 #include <cstring>
-#include <cstio>
+#include <cstdio>
 #include <functional>
 using namespace clang;
 using namespace sema;

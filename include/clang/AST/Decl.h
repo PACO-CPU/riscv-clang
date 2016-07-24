@@ -148,12 +148,21 @@ public:
 private:
 //  NamedDecl *getUnderlyingDeclImpl();
 //  void verifyLinkage() const;
-
+  std::string _lutId;
 protected:
   ApproxDecoratorDecl(DeclContext *DC, SourceLocation StartLoc);
   std::vector<KeyValue*> _keyvalues;
 
+
 public:
+  void SetLutId(std::string lutId) {
+	  _lutId = lutId;
+  }
+
+  std::string GetLutId() {
+	  return  _lutId;
+  }
+
   static ApproxDecoratorDecl *Create(ASTContext &C, DeclContext *DC,
                                SourceLocation StartLoc
                                );

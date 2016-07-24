@@ -5845,7 +5845,12 @@ Decl *Parser::ParseApproxDecorator(SourceLocation &DeclEnd) {
     ConsumeParen();
   }
 
-  return Actions.ActOnApproxDecorator(
-    getCurScope(),ApproxLoc,keyvalues.data(),keyvalues.size());
+	uuid_t id;
+   	 uuid_generate(id);
+ 	 char *test = new char[100];
+ 	 uuid_unparse(id, test);
+	std::string strTest(test);
+	 return Actions.ActOnApproxDecorator(
+    getCurScope(),ApproxLoc,keyvalues.data(),keyvalues.size(), strTest);
 }
 
