@@ -2933,30 +2933,36 @@ RValue CodeGenFunction::EmitCallExpr(const CallExpr *E,
   if(FD!=NULL) {
     ApproxDecoratorDecl *AD = FD->GetApproxDecorator();
     if(AD!=NULL) {
+      ASTContext* cont = &getContext();
       std::vector<ApproxDecoratorDecl::KeyValue*> KVs = AD->getKeyValues();
       for(size_t i=0;i<KVs.size();i++) {
         if((StringRef((KVs[i]->getIdent()))).compare("strategy") == 0) {
           const Expr * const*ArgExprs = E->getArgs();
-          //TODOPACO: getUUID as Value*
           llvm::Value *UUID;
           llvm::Value *v1;
           llvm::Value *v2;
           llvm::Value *v3;
-        
+          StringRef UUID_Ref;
+          UUID_Ref = StringRef(AD->GetLutId());
+          UUID_Ref = StringRef("test");
+          StringLiteral* UUID_Literal;
+          UUID_Literal = StringLiteral::Create(getContext(), UUID_Ref, StringLiteral::Ascii, false, cont->getPointerType(cont->CharTy), SourceLocation());
+          // TODOPACO: solve error in this line
+          //UUID = CGM.GetAddrOfConstantStringFromLiteral(UUID_Literal);
+          
           if(E->getNumArgs()>0) {
             if(E->getNumArgs()>1) {
               if(E->getNumArgs()>2) {
                 if(E->getNumArgs()>3) {
-                  // TODOPACO: more than 3 args, error
+                  // more than 3 args, error
                 }
                 // 3 args
-                UUID = 0;
                 v1 = EmitScalarExpr(ArgExprs[0]);
                 v2 = EmitScalarExpr(ArgExprs[1]);
                 v3 = EmitScalarExpr(ArgExprs[2]);
                 return RValue::get(Builder.CreateCall4(CGM.getIntrinsic(
-                    llvm::Intrinsic::riscv_add_approx), v1, v2, 
-                    v3, UUID, llvm::Twine(FD->getName().str().c_str()))); //TODOPACO all correct?
+                    llvm::Intrinsic::riscv_lute3), v1, v2, 
+                    v3, UUID, llvm::Twine(FD->getName().str().c_str())));
               }
               else {
                 // 2 args
@@ -2968,8 +2974,7 @@ RValue CodeGenFunction::EmitCallExpr(const CallExpr *E,
               //1 arg
               v1 = EmitScalarExpr(ArgExprs[0]);
               return RValue::get(Builder.CreateCall2(CGM.getIntrinsic(
-                  llvm::Intrinsic::riscv_add_approx), v1 
-                  ));
+                  llvm::Intrinsic::riscv_lute), v1, UUID, llvm::Twine(FD->getName().str().c_str()));
             }
           }
         }
