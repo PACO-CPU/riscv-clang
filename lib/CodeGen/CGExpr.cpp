@@ -28,6 +28,7 @@
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/MDBuilder.h"
 #include "llvm/Support/ConvertUTF.h"
+#include "llvm/IR/Module.h"
 
 using namespace clang;
 using namespace CodeGen;
@@ -2931,37 +2932,49 @@ RValue CodeGenFunction::EmitCallExpr(const CallExpr *E,
   const FunctionDecl *FD = E->getDirectCallee();
   if(FD!=NULL) {
     ApproxDecoratorDecl *AD = FD->GetApproxDecorator();
+    RValue test = RValue::get(Builder.CreateCall(CGM.getIntrinsic(
+                  llvm::Intrinsic::riscv_add_approx), EmitScalarExpr(E->getArgs()[0])));
     if(AD!=NULL) {
       //TODOPACO: Add code to emit approx function code here
       //TODOPACO: Do not forget to emit the lutc function in emitdecl function
       std::vector<ApproxDecoratorDecl::KeyValue*> KVs = AD->getKeyValues();
       for(size_t i=0;i<KVs.size();i++) {
         if((StringRef((KVs[i]->getIdent()))).compare("strategy") == 0) {
-          // Different strategies //TODOPACO: is this needed?
-          if(KVs[i]->getStr().compare("uniform") == 0) {
-            // Emit 
-            return RValue::get(0);//TODOPACO: figure out how to get input ops and output ops: Builder.CreateCall4(CGM.getIntrinsic(
-                //llvm::Intrinsic::riscv_add_approx/*riscv_lute*/ /*is this correct?*/), op1, op2, op3, constInt, FD.getName()->getStr().cstr()); //TODOPACO all correct?
-          } else if ((StringRef(KVs[i]->getStr())).compare("log_left") == 0) {
-            return RValue::get(0);//TODOPACO: 
-          } else if ((StringRef(KVs[i]->getStr())).compare("log_right") == 0) {
-            return RValue::get(0);//TODOPACO: 
-          } else if ((StringRef(KVs[i]->getStr())).compare("weighted") == 0) {
-            return RValue::get(0);//TODOPACO: 
-          } else if ((StringRef(KVs[i]->getStr())).compare("min_error") == 0) {
-            return RValue::get(0);//TODOPACO: 
-          } else if ((StringRef(KVs[i]->getStr())).compare("min_error_weighted") == 0) {
-            return RValue::get(0);//TODOPACO: 
-          } else if ((StringRef(KVs[i]->getStr())).compare("explicit_segments") == 0) {
-            return RValue::get(0);//TODOPACO: 
-          } else if ((StringRef(KVs[i]->getStr())).compare("interpolated") == 0) {
-            return RValue::get(0);//TODOPACO: 
-          } else if ((StringRef(KVs[i]->getStr())).compare("min_error_2?") == 0) {//TODOPACO: correct?
-            return RValue::get(0);//TODOPACO: 
-          } else if((StringRef(KVs[i]->getStr())).compare("min_error_weighted2?") == 0) {//TODOPACO: correct?
-            return RValue::get(0);//TODOPACO: 
-          } else {
-            return RValue::get(0);//TODOPACO: Error case?
+          const Expr * const*ArgExprs = E->getArgs();
+          //TODOPACO: getUUID as Value*
+          //ArgExprs[0];
+          //ArgExprs[1];
+          //ArgExprs[2];
+          llvm::Value *UUID;
+          llvm::Value *v1;
+          llvm::Value *v2;
+          llvm::Value *v3;
+        
+          if(E->getNumArgs()>0) {
+            if(E->getNumArgs()>1) {
+              if(E->getNumArgs()>2) {
+                // 3 args
+                UUID = 0;
+                v1 = EmitScalarExpr(ArgExprs[0]);
+                v2 = EmitScalarExpr(ArgExprs[1]);
+                v3 = EmitScalarExpr(ArgExprs[2]);
+                //return RValue::get(Builder.CreateCall4(CGM.getIntrinsic(
+                //    llvm::Intrinsic::riscv_add_approx), v1, v2, 
+                //    v3, UUID, llvm::Twine(FD->getName().str().c_str()))); //TODOPACO all correct?
+              }
+              else {
+                // 2 args
+                //TODOPACO: This case does not exist, because we only use LUTE (one input) and LUTE3 (3 inputs)
+                //return RValue::get(0);
+              }
+            }
+            else {
+              //1 arg
+              v1 = EmitScalarExpr(ArgExprs[0]);
+              //return RValue::get(Builder.CreateCall(CGM.getIntrinsic(
+              //    llvm::Intrinsic::riscv_add_approx), v1 
+                  ));
+            }
           }
         }
       }

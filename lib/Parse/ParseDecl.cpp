@@ -2488,6 +2488,8 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
           isInvalid = DS.SetTypeSpecType(DeclSpec::TST_typename,
                                          Tok.getAnnotationEndLoc(),
                                          PrevSpec, DiagID, T);
+          if(getLangOpts().PACO)
+            DS.SetApproxDecorator(T.get().GetApproxDecorator(), Tok.getAnnotationEndLoc(),PrevSpec, DiagID);
           if (isInvalid)
             break;
         }

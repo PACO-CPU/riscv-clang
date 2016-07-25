@@ -698,8 +698,27 @@ void CodeGenFunction::GenerateCode(GlobalDecl GD, llvm::Function *Fn,
     // copy-constructors.
     emitImplicitAssignmentOperatorBody(Args);
   }
-  else
-    EmitFunctionBody(Args);
+  else {
+    //PACO addition
+    //Remove function body when it is replaced by the LUT compiler
+    if(getLangOpts().PACO) {
+      bool stopEmit = false;
+      ApproxDecoratorDecl *AD = FD->GetApproxDecorator();
+      if(AD!=NULL) {
+        std::vector<ApproxDecoratorDecl::KeyValue*> KVs = AD->getKeyValues();
+        for(size_t i=0;i<KVs.size();i++) {
+          if((StringRef((KVs[i]->getIdent()))).compare("strategy") == 0) {
+            stopEmit = true;
+          }
+        }
+      }
+      if(!stopEmit)
+        EmitFunctionBody(Args);
+    }
+    else
+      //end PACO
+      EmitFunctionBody(Args);
+  }
 
   // C++11 [stmt.return]p2:
   //   Flowing off the end of a function [...] results in undefined behavior in

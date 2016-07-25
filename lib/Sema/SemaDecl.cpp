@@ -45,7 +45,7 @@
 #include <algorithm>
 #include <cstring>
 #include <functional>
-#include <cstdio>
+
 using namespace clang;
 using namespace sema;
 
@@ -9240,18 +9240,6 @@ void Sema::AddKnownFunctionAttributes(FunctionDecl *FD) {
 
 TypedefDecl *Sema::ParseTypedefDecl(Scope *S, Declarator &D, QualType T,
                                     TypeSourceInfo *TInfo) {
-  ApproxDecoratorDecl *APD = D.getDeclSpec().GetApproxDecorator();
-  if(APD!=NULL) {
-    std::vector<ApproxDecoratorDecl::KeyValue*> KVs = APD->getKeyValues();
-    for(size_t i=0;i<KVs.size();i++) {
-      std::string print1 = std::string("Yeah, ApproxDecl  is: ") + KVs[i]->getIdent() + std::string(" %l ") + KVs[i]->getStr().str();
-      int64_t intD = *(KVs[i]->getNum().getInt().getRawData());
-      printf(print1.c_str(),intD);
-    }
-  }
-  else
-    printf("NOOOO, there is NOOO TypedefDecl with ApproxDecl! Damn!");
-  
   assert(D.getIdentifier() && "Wrong callback for declspec without declarator");
   assert(!T.isNull() && "GetTypeForDeclarator() returned null type");
 
@@ -9317,7 +9305,11 @@ TypedefDecl *Sema::ParseTypedefDecl(Scope *S, Declarator &D, QualType T,
   default:
     break;
   }
-
+  if(getLangOpts().PACO) {
+    ApproxDecoratorDecl *APD = D.getDeclSpec().GetApproxDecorator();
+    NewTD->SetApproxDecorator(APD);
+    NewTD->getTypeSourceInfo()->getType().SetApproxDecorator(APD);
+  }
   return NewTD;
 }
 

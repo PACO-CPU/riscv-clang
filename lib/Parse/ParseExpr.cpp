@@ -429,7 +429,7 @@ Parser::ParseRHSOfBinaryExpression(ExprResult LHS, prec::Level MinPrec) {
                                      Actions.getExprRange(RHS.get()).getEnd()));
         if(getLangOpts().PACO){
           if(ThisPrec == prec::Assignment){
-            
+            RHS.take()->setRelaxMask(LHS.take()->getRelaxMask());
           }
           else {
             RHS.take()->setRelaxMask(LHS.take()->getRelaxMask());
