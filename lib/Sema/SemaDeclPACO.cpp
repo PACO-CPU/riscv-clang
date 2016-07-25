@@ -187,12 +187,15 @@ bool Sema::CheckApproxKeyVaule(SourceLocation ApproxLoc,
 Decl *Sema::ActOnApproxDecorator(
   Scope *S,SourceLocation ApproxLoc,
   ApproxDecoratorDecl::KeyValue **keyvalues,
-  size_t keyvalue_count) {
+  size_t keyvalue_count,
+  std::string identifier
+  ) {
   ApproxDecoratorDecl *ADec = 0;
   bool has_relax = false;
 
   ADec=ApproxDecoratorDecl::Create(Context,CurContext,ApproxLoc);
 
+  ADec->SetLutId(identifier);
   for(size_t i=0;i<keyvalue_count;i++) {
     if (CheckApproxKeyVaule(ApproxLoc, ADec->getKeyValues(), keyvalues[i])) {
       if(StringRef(keyvalues[i]->getIdent()).compare("neglect") == 0) {
@@ -206,6 +209,7 @@ Decl *Sema::ActOnApproxDecorator(
     }
   }
 
+  printf("%s", ADec->GetLutId().c_str());
   if(!has_relax) {
     llvm::APSInt val = llvm::APSInt(1);val = 1;
     ADec->appendKeyValue(new ApproxDecoratorDecl::KeyValue(std::string("relax"),

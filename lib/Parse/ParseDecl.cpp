@@ -26,6 +26,7 @@
 #include "llvm/ADT/StringSwitch.h"
 
 #include <stdio.h>
+#include <uuid/uuid.h>
 
 using namespace clang;
 
@@ -5705,6 +5706,12 @@ Decl *Parser::ParseApproxDecorator(SourceLocation &DeclEnd, DeclSpec &DS, const 
     {
       if(PP.getSpelling(Tok).compare("strategy") == 0) 
       {
+	uuid_t id;
+   	 uuid_generate(id);
+
+ 	 char *string = new char[100];
+ 	 uuid_unparse(id, string);
+       	printf(string);	 
         Token tokiMoki = Tok;
         int index = 1;
 	std::string numSegments = "";
@@ -5845,7 +5852,12 @@ Decl *Parser::ParseApproxDecorator(SourceLocation &DeclEnd, DeclSpec &DS, const 
     }
   }
 
-  return Actions.ActOnApproxDecorator(
-    getCurScope(),ApproxLoc,keyvalues.data(),keyvalues.size());
+	uuid_t id;
+   	 uuid_generate(id);
+ 	 char *test = new char[100];
+ 	 uuid_unparse(id, test);
+	std::string strTest(test);
+	 return Actions.ActOnApproxDecorator(
+    getCurScope(),ApproxLoc,keyvalues.data(),keyvalues.size(), strTest);
 }
 

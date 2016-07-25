@@ -44,6 +44,7 @@
 #include "llvm/ADT/Triple.h"
 #include <algorithm>
 #include <cstring>
+#include <cstdio>
 #include <functional>
 
 using namespace clang;

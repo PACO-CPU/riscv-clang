@@ -7247,7 +7247,7 @@ public:
     IdentifierInfo *ident, ExprResult exprNode, SourceLocation exprLoc);
   Decl *ActOnApproxDecorator(
     Scope *CurScope,SourceLocation ApproxLoc,
-    ApproxDecoratorDecl::KeyValue **keyvalues, size_t keyvalue_count);
+    ApproxDecoratorDecl::KeyValue **keyvalues, size_t keyvalue_count, std::string identifier);
 
   /// \name Code completion
   //@{
