@@ -34,6 +34,7 @@
 #include "clang/Sema/ScopeInfo.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallString.h"
+#include "clang/Sema/PACO.h"
 #include <map>
 #include <set>
 
@@ -138,7 +139,8 @@ bool Sema::CheckApproxKeyVaule(SourceLocation ApproxLoc,
             return true;
         }
       } 
-    } else if (identName.compare("mask") == 0) {
+    } 
+    else if (identName.compare("mask") == 0) {
       for(size_t i=0;i<keyvalues.size();i++) {
         StringRef valueName = StringRef(keyvalues[i]->getIdent());
 
@@ -153,7 +155,8 @@ bool Sema::CheckApproxKeyVaule(SourceLocation ApproxLoc,
             return true;
         }
       }
-    } else if (identName.compare("inject") == 0) {
+    } 
+    else if (identName.compare("inject") == 0) {
       for(size_t i=0;i<keyvalues.size();i++) {
         StringRef valueName = StringRef(keyvalues[i]->getIdent());
         if(valueName.compare("inject") == 0) {
@@ -162,7 +165,8 @@ bool Sema::CheckApproxKeyVaule(SourceLocation ApproxLoc,
             return true;
         }
       }
-    } else if (identName.compare("relax") == 0) {
+    } 
+    else if (identName.compare("relax") == 0) {
       for(size_t i=0;i<keyvalues.size();i++) {
         StringRef valueName = StringRef(keyvalues[i]->getIdent());
         if(valueName.compare("relax") == 0) {
@@ -172,11 +176,19 @@ bool Sema::CheckApproxKeyVaule(SourceLocation ApproxLoc,
         }
       }
     } 
-      else if(identName.compare("strategy") == 0) {
+    else if(identName.compare(PACO::KV_STRATEGY) == 0) {
        	    //string someString("This is the lut and no error");
 	      //printf("%s\n", "This is lut");
-	          }
-      else {
+    }
+    else if(identName.compare(PACO::KV_APPROXIMATION) == 0) {
+    }
+    else if(identName.compare(PACO::KV_NUM_SEGMENTS) == 0) {
+    }
+    else if(identName.compare(PACO::KV_SEGMENTS) == 0) {
+    }
+    else if(identName.compare(PACO::KV_BOUNDS) == 0) {
+    }
+    else {
       Diag(ApproxLoc,diag::err_approx_keyvalue_not_valid);
       return false;
     }
@@ -184,18 +196,28 @@ bool Sema::CheckApproxKeyVaule(SourceLocation ApproxLoc,
 }
   
 
-Decl *Sema::ActOnApproxDecorator(
-  Scope *S,SourceLocation ApproxLoc,
+ApproxDecoratorDecl *Sema::ActOnApproxDecorator(
+  Scope *S, SourceLocation ApproxLoc,
   ApproxDecoratorDecl::KeyValue **keyvalues,
   size_t keyvalue_count,
-  std::string identifier
-  ) {
+  std::string identifier) {
+ 
+  ApproxDecoratorDecl *aDecl =ActOnApproxDecorator( S, ApproxLoc, keyvalues, keyvalue_count);
+  aDecl->SetLutId(identifier);
+  return aDecl;
+
+}
+
+ApproxDecoratorDecl *Sema::ActOnApproxDecorator(
+  Scope *S,SourceLocation ApproxLoc,
+  ApproxDecoratorDecl::KeyValue **keyvalues,
+  size_t keyvalue_count ) {
+  
   ApproxDecoratorDecl *ADec = 0;
   bool has_relax = false;
 
   ADec=ApproxDecoratorDecl::Create(Context,CurContext,ApproxLoc);
 
-  ADec->SetLutId(identifier);
   for(size_t i=0;i<keyvalue_count;i++) {
     if (CheckApproxKeyVaule(ApproxLoc, ADec->getKeyValues(), keyvalues[i])) {
       if(StringRef(keyvalues[i]->getIdent()).compare("neglect") == 0) {
@@ -209,7 +231,6 @@ Decl *Sema::ActOnApproxDecorator(
     }
   }
 
-  printf("%s", ADec->GetLutId().c_str());
   if(!has_relax) {
     llvm::APSInt val = llvm::APSInt(1);val = 1;
     ADec->appendKeyValue(new ApproxDecoratorDecl::KeyValue(std::string("relax"),
@@ -226,12 +247,12 @@ ApproxDecoratorDecl::KeyValue *Sema::ActOnApproxDecoratorKeyValue(
   Expr::EvalResult val;
   StringLiteral *lit;
 
-  printf("  %s = ",ident->getNameStart());
+  //printf("  %s = ",ident->getNameStart());
 
   if (StringLiteral::classof(expr)) { // string key-value
     lit=reinterpret_cast<StringLiteral*>(expr);
     StringRef r=lit->getString();
-    printf("'%.*s'\n",r.size(),r.data());
+    //printf("'%.*s'\n",r.size(),r.data());
     return new ApproxDecoratorDecl::KeyValue(ident->getName().str(),lit->getString());
 
   } else { // numeric key-value
@@ -243,24 +264,24 @@ ApproxDecoratorDecl::KeyValue *Sema::ActOnApproxDecoratorKeyValue(
     switch(val.Val.getKind()) {
       case APValue::Int:
         
-        printf(
-          "(int)%lli\n",
-          (int64_t)val.Val.getInt().getLimitedValue());
+     //   printf(
+     //     "(int)%lli\n",
+     //     (int64_t)val.Val.getInt().getLimitedValue());
         break;
       case APValue::Float:
-        printf("(float)%g\n",val.Val.getFloat().convertToDouble());
+     //   printf("(float)%g\n",val.Val.getFloat().convertToDouble());
         break;
       case APValue::ComplexInt:
-        printf(
-          "(cint)%lli + i*%lli\n",
-          (int64_t)val.Val.getComplexIntReal().getLimitedValue(),
-          (int64_t)val.Val.getComplexIntImag().getLimitedValue());
+     //   printf(
+     //     "(cint)%lli + i*%lli\n",
+     //     (int64_t)val.Val.getComplexIntReal().getLimitedValue(),
+     //     (int64_t)val.Val.getComplexIntImag().getLimitedValue());
         break;
       case APValue::ComplexFloat:
-        printf(
-          "(cfloat)%g + i*%g\n",
-          val.Val.getComplexFloatReal().convertToDouble(),
-          val.Val.getComplexFloatImag().convertToDouble());
+      //  printf(
+      //    "(cfloat)%g + i*%g\n",
+      //    val.Val.getComplexFloatReal().convertToDouble(),
+      //    val.Val.getComplexFloatImag().convertToDouble());
         break;
       default:
         Diag(exprLoc,diag::err_approx_data_not_num);

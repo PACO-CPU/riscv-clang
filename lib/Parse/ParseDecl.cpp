@@ -24,9 +24,11 @@
 #include "llvm/ADT/SmallSet.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringSwitch.h"
-
+#include "clang/Sema/PACO.h"
 #include <stdio.h>
 #include <uuid/uuid.h>
+#include <iostream>
+#include <fstream>
 
 using namespace clang;
 
@@ -5688,7 +5690,7 @@ Decl *Parser::ParseApproxDecorator(SourceLocation &DeclEnd, DeclSpec &DS, const 
                                unsigned &DiagID, bool *isInvalid) {
  
   assert(Tok.is(tok::kw_approx));
-  printf("approx\n");
+  //printf("approx\n");
   IdentifierInfo *inf_ident;
   ExprResult expr;
   ApproxDecoratorDecl::KeyValue *keyvalue;
@@ -5696,6 +5698,7 @@ Decl *Parser::ParseApproxDecorator(SourceLocation &DeclEnd, DeclSpec &DS, const 
   SmallVector<ApproxDecoratorDecl::KeyValue*, 8> keyvalues;
   SourceLocation ApproxLoc;
   
+  std::string lutId = ""; 
   while(Tok.is(tok::kw_approx)) {
 
     // Eat 'approx' and '('.
@@ -5704,110 +5707,8 @@ Decl *Parser::ParseApproxDecorator(SourceLocation &DeclEnd, DeclSpec &DS, const 
 
     while (!Tok.is(tok::r_paren))
     {
-      if(PP.getSpelling(Tok).compare("strategy") == 0) 
-      {
-	uuid_t id;
-   	 uuid_generate(id);
-
- 	 char *string = new char[100];
- 	 uuid_unparse(id, string);
-       	printf(string);	 
-        Token tokiMoki = Tok;
-        int index = 1;
-	std::string numSegments = "";
-	std::string bounds = "";
-	std::string segments = "";
-	std::string approximation = "";
-	std::string value = "";
-	std::string value2 = "";
-	std::string value3 = "";
-	std::string value4 = "";
-        while(!tokiMoki.is(tok::r_paren))
-	{
-	      if(PP.getSpelling(tokiMoki).compare("numSegments") == 0 )
-	      {
-		numSegments = PP.getSpelling(tokiMoki).data();
-		index++;                 
-		tokiMoki = PP.LookAhead(index); 
-		if(!tokiMoki.is(tok::equal))     
-		{
-		  printf("Error");       
-		}
-		index++;                 
-		tokiMoki = PP.LookAhead(index); 
-                value = PP.getSpelling(tokiMoki).data();
-	      }
-	      if(PP.getSpelling(tokiMoki).compare("bounds") == 0 )
-	      {
-	        bounds = PP.getSpelling(tokiMoki).data();
-
-		index++;                 
-		tokiMoki = PP.LookAhead(index); 
-		if(!tokiMoki.is(tok::equal))     
-		{
-		 printf("Error");
-		}
-		index++;
-		tokiMoki = PP.LookAhead(index); 
-                value2 = PP.getSpelling(tokiMoki).data();
-	      }
-	      if(PP.getSpelling(tokiMoki).compare("segments") == 0 )
-	      {
-		segments = PP.getSpelling(tokiMoki).data();
-		index++;                 
-		tokiMoki = PP.LookAhead(index); 
-		if(!tokiMoki.is(tok::equal))     
-		{
-		  printf("Error");
-		}
-		index++;
-		tokiMoki = PP.LookAhead(index);
-		value3 = PP.getSpelling(tokiMoki).data();
-	      }
-	      if(PP.getSpelling(tokiMoki).compare("approximation") == 0 )
-	      {
-	        approximation = PP.getSpelling(tokiMoki).data();
-		index++;                 
-		tokiMoki = PP.LookAhead(index); 
-		if(!tokiMoki.is(tok::equal))     
-		{
-		  printf("Error");
-		}
-		index++;
-		tokiMoki = PP.LookAhead(index);
-		value4 = PP.getSpelling(tokiMoki).data();
-	      }
-	      index++;                   
-	      tokiMoki = PP.LookAhead(index); 
-	    }   
-	      index++;                   
-	      tokiMoki = PP.LookAhead(index); 
-	 //return name                
-	    std::string ret;
-        ret	= PP.getSpelling(preApprox).data();
-	std::string name;
-        name	= PP.getSpelling(tokiMoki).data();
-	index++;
-	tokiMoki = PP.LookAhead(index); 
-	//Keyvalues
-	printf("name = \"%s\"\n", name.c_str());
-	printf("%s = \"%s\"\n", numSegments.c_str(), value.c_str());
-	printf("%s = %s\n", bounds.c_str(), value2.c_str());
-	printf("%s = %s\n", segments.c_str(), value3.c_str());
-	printf("%s = %s\n", approximation.c_str(), value4.c_str());
-	printf("\n%%%%\n\n%s %s -> %s\n\n%%%%\n\n\n", name.c_str(), ret.c_str(), ret.c_str());
-	printf("%s %s",ret.c_str(),name.c_str());
-	while(!tokiMoki.is(tok::r_brace)) {
-	 tokiMoki = PP.LookAhead(index); 
-	printf(PP.getSpelling(tokiMoki).data());
-	printf(" ");
-	if(tokiMoki.is(tok::semi) or tokiMoki.is(tok::l_brace))
-	{ 
-	  printf("\n");            
-	} 
-	tokiMoki = PP.LookAhead(index);
-	          index++;
-	} 
+      if(PP.getSpelling(Tok).compare(PACO::KV_STRATEGY) == 0) {
+        lutId = ParseLutStrategy();
       }
       // expect an identifier
       if (!Tok.is(tok::identifier)) {
@@ -5851,13 +5752,117 @@ Decl *Parser::ParseApproxDecorator(SourceLocation &DeclEnd, DeclSpec &DS, const 
       ConsumeToken();
     }
   }
+  if(lutId.empty()) {
+    return Actions.ActOnApproxDecorator(
+    getCurScope(),ApproxLoc,keyvalues.data(),keyvalues.size());
+  }
+  return Actions.ActOnApproxDecorator(
+    getCurScope(),ApproxLoc,keyvalues.data(),keyvalues.size(), lutId);
+}
+std::string Parser::ParseLutStrategy() {
+  //Generation of the uuid for naming the lut function
+  uuid_t id;
+  uuid_generate_time_safe(id);
+  char *charId = new char[100];
+  uuid_unparse(id, charId);
+  std::string strId(charId);
 
-	uuid_t id;
-   	 uuid_generate(id);
- 	 char *test = new char[100];
- 	 uuid_unparse(id, test);
-	std::string strTest(test);
-	 return Actions.ActOnApproxDecorator(
-    getCurScope(),ApproxLoc,keyvalues.data(),keyvalues.size(), strTest);
+  //Variale Declaration
+  Token next = Tok;
+  int index = 1;
+  
+  std::string numSegments = "";
+  std::string bounds = "";
+  std::string segments = "";
+  std::string approximation = "";
+
+  //Reading all tokens within the approx brakets
+  while(!next.is(tok::r_paren)) {
+    if(PP.getSpelling(next).compare(PACO::KV_NUM_SEGMENTS) == 0 ) {
+      numSegments = LookAtLutKeyValue(index, next);
+    }
+    if(PP.getSpelling(next).compare(PACO::KV_BOUNDS) == 0) {
+      bounds = LookAtLutKeyValue(index, next);
+    } 
+    if(PP.getSpelling(next).compare(PACO::KV_SEGMENTS) == 0) {
+      segments = LookAtLutKeyValue(index, next);
+      //Checking for errors
+    }
+    if(PP.getSpelling(next).compare(PACO::KV_APPROXIMATION) == 0) {
+      approximation = LookAtLutKeyValue(index, next);
+      //Checking for errors
+    }
+    next = LookAtNextToken(index);
+  }
+  
+  //Checking for Return type
+  std::string ret = PP.getSpelling(preApprox).data();
+  
+  std::string name = "";
+  //Checking for function name
+  next = LookAtNextToken(index);
+  if(next.is(tok::identifier) && LookAtNextToken(index).is(tok::l_paren)) {
+    name = PP.getSpelling(next).data();
+  }
+  std::string signature = "(";
+  //Checking input of function
+  while(!next.is(tok::r_paren)) {	  
+    next = LookAtNextToken(index);
+    signature = signature + " " + PP.getSpelling(next).data();
+    if(!next.is(tok::kw_int)) {
+      //Create a diag for expecting a specific input value
+    }
+  }
+  
+  std::string filename = strId + ".input";	  
+  //Wrting the stuff to file
+  std::ofstream out(filename.c_str());
+
+  //Printing the stuff
+  std::string header = "name = " + strId + "\n";
+  header = header + PACO::KV_NUM_SEGMENTS + " = " + numSegments + "\n";
+  header = header + PACO::KV_BOUNDS + " = " + bounds + "\n";
+  header = header + PACO::KV_SEGMENTS + " = " + segments + "\n";
+  header = header + PACO::KV_APPROXIMATION + " = " + approximation + "\n";
+  
+  header = header + "\n%%\n\n" + name + " " + ret + " -> " + ret + "\n\n%%\n\n\n";
+  
+  std::string sig = ret + " " + name + " " + signature;	  
+  //printf("\n%%%%\n\n%s %s -> %s\n\n%%%%\n\n\n", name.c_str(), ret.c_str(), ret.c_str());                  
+  //printf("%s %s %s",ret.c_str(),name.c_str(), signature.c_str());
+
+  next = LookAtNextToken(index);
+  //Writing the function body to string
+  std::string body ="";
+  while(!next.is(tok::r_brace)) {                                                                            
+    //next = PP.LookAhead(index);                                                                               
+    body = body + PP.getSpelling(next).data() + " ";                                                               
+    if(next.is(tok::semi) or next.is(tok::l_brace)) {                                                       
+      body = body + "\n";                                                                            
+    }	
+    next = LookAtNextToken(index);
+  }                  
+  body = body + "}";
+ 
+  std::string input = header + sig + body;
+  out << input;
+  out.close();
+  return strId;
 }
 
+std::string Parser::LookAtLutKeyValue(int &index, Token &token) {
+  token = LookAtNextToken(index);
+  if(!token.is(tok::equal)) {
+      Diag(token.getLocation(), diag::err_expected_equal_after);
+  }
+  token = LookAtNextToken(index);
+  if(!token.is(tok::string_literal)) {
+    Diag(token.getLocation(), diag::err_expected_approx_kv_data);
+  }
+  return PP.getSpelling(token).data();
+}	  
+	  
+Token Parser::LookAtNextToken(int &position) { 
+  position++;
+  return PP.LookAhead(position);
+}

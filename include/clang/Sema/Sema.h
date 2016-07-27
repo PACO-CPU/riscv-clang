@@ -7245,7 +7245,12 @@ public:
 
   ApproxDecoratorDecl::KeyValue *ActOnApproxDecoratorKeyValue(
     IdentifierInfo *ident, ExprResult exprNode, SourceLocation exprLoc);
-  Decl *ActOnApproxDecorator(
+
+  ApproxDecoratorDecl *ActOnApproxDecorator(
+    Scope *CurScope,SourceLocation ApproxLoc,
+    ApproxDecoratorDecl::KeyValue **keyvalues, size_t keyvalue_count);
+
+  ApproxDecoratorDecl *ActOnApproxDecorator(
     Scope *CurScope,SourceLocation ApproxLoc,
     ApproxDecoratorDecl::KeyValue **keyvalues, size_t keyvalue_count, std::string identifier);
 

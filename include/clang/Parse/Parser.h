@@ -2246,6 +2246,10 @@ private:
 
   Decl *ParseApproxDecorator(SourceLocation &DeclEnd, DeclSpec &DS, const char *&PrevSpec,
                                unsigned &DiagID, bool *isInvalid);
+  //Decl *ParseApproxDecorator(SourceLocation &DeclEnd);
+  std::string ParseLutStrategy();
+  Token LookAtNextToken(int &position);
+  std::string LookAtLutKeyValue(int &index, Token &token);
 
   //===--------------------------------------------------------------------===//
   // Preprocessor code-completion pass-through

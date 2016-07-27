@@ -2974,7 +2974,7 @@ RValue CodeGenFunction::EmitCallExpr(const CallExpr *E,
               //1 arg
               v1 = EmitScalarExpr(ArgExprs[0]);
               return RValue::get(Builder.CreateCall2(CGM.getIntrinsic(
-                  llvm::Intrinsic::riscv_lute), v1, UUID, llvm::Twine(FD->getName().str().c_str()));
+                  llvm::Intrinsic::riscv_lute), v1, UUID, llvm::Twine(FD->getName().str().c_str())));
             }
           }
         }
