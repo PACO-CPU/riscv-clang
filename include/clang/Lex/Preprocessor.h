@@ -1456,10 +1456,6 @@ public:
   void HandlePragmaPopMacro(Token &Tok);
   void HandlePragmaIncludeAlias(Token &Tok);
   IdentifierInfo *ParsePragmaPushOrPopMacro(Token &Tok);
-  // TODO: fill arguments when changed
-  void HandlePragmaPACOCombine(Token &PACOCombineTok);
-  void HandlePragmaPACOIntermediateLiteral(Token
-                                           &PACOIntermediateLiteralTok);
 
   // Return true and store the first token only if any CommentHandler
   // has inserted some tokens and getCommentRetentionState() is false.

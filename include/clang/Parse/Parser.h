@@ -193,6 +193,7 @@ class Parser : public CodeCompletionHandler {
     unsigned getDepth() const { return Depth; }
   };
   
+  Token preApprox;
   APValue* SavedRelaxMask;
   bool RelaxIsSaved = false;
 

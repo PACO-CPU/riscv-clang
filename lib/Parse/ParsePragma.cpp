@@ -17,7 +17,8 @@
 #include "clang/Parse/Parser.h"
 #include "clang/Sema/Scope.h"
 #include "llvm/ADT/StringSwitch.h"
-#include "stdio.h"
+#include "clang/Sema/PACO.h"
+
 using namespace clang;
 
 /// \brief Handle the annotation token produced for #pragma unused(...)

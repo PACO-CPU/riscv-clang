@@ -15,6 +15,7 @@
 #define LLVM_CLANG_PARSE_PARSEPRAGMA_H
 
 #include "clang/Lex/Pragma.h"
+#include "clang/Sema/PACO.h"
 
 namespace clang {
   class Sema;
@@ -124,7 +125,7 @@ public:
 /// PragmaPACOCombineHandler - "\#pragma paco
 class PragmaPACOHandler : public PragmaHandler {
 public:
-  PragmaPACOHandler() : PragmaHandler("paco") {}
+  PragmaPACOHandler() : PragmaHandler(PACO::KV_PRAGMA_PACO.c_str()) {}
   virtual void HandlePragma(Preprocessor &PP, PragmaIntroducerKind Introducer,
                             Token &FirstToken);
 };

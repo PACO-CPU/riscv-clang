@@ -18,7 +18,7 @@
 #include "clang/Basic/TargetInfo.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/Lookup.h"
-#include "stdio.h"
+
 using namespace clang;
 
 //===----------------------------------------------------------------------===//
@@ -418,14 +418,4 @@ void Sema::PopPragmaVisibility(bool IsNamespaceEnd, SourceLocation EndLoc) {
   // To simplify the implementation, never keep around an empty stack.
   if (Stack->empty())
     FreeVisContext();
-}
-
-void Sema::ActOnPragmaPACOCombine(Sema::PragmaPACOCombineMode Mode)
-{
-    PACOCombineMode = Mode;
-}
-
-void Sema::ActOnPragmaPACOIntermediateLiteral(Sema::PragmaPACOIntermediateLiteralMode Mode)
-{
-    PACOIntermediateLiteralMode = Mode;
 }

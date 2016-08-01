@@ -2290,8 +2290,6 @@ void Parser::ParseAlignmentSpecifier(ParsedAttributes &Attrs,
                ArgExprs.data(), 1, AttributeList::AS_Keyword, EllipsisLoc);
 }
 
-Token preApprox;
-
 /// ParseDeclarationSpecifiers
 ///       declaration-specifiers: [C99 6.7]
 ///         storage-class-specifier declaration-specifiers[opt]
@@ -2885,15 +2883,12 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
                                      DiagID);
       break;
     case tok::kw_int:
-      //TODO: Need to extend this!
       for(int i1= 0; i1 < 3;i1++)
       {
-        bool testiBesti = false;
-	Token tokiBoki = PP.LookAhead(i1);
-	if(tokiBoki.is(tok::kw_approx))
-	{
-	  preApprox = Tok;
-	}
+        if(PP.LookAhead(i1).is(tok::kw_approx))
+        {
+          preApprox = Tok;
+        }
       }
       isInvalid = DS.SetTypeSpecType(DeclSpec::TST_int, Loc, PrevSpec,
                                      DiagID);
@@ -3114,9 +3109,7 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
         goto DoneWithDeclSpec;
 
       decl=ParseApproxDecorator(locEnd, DS, PrevSpec, DiagID, &isInvalid);
-
-      // todo: figure out if this is the correct action to take in case of 
-      // error.
+      
       if (decl==NULL) break;
 
       assert(
@@ -5690,7 +5683,7 @@ Decl *Parser::ParseApproxDecorator(SourceLocation &DeclEnd, DeclSpec &DS, const 
                                unsigned &DiagID, bool *isInvalid) {
  
   assert(Tok.is(tok::kw_approx));
-  //printf("approx\n");
+  
   IdentifierInfo *inf_ident;
   ExprResult expr;
   ApproxDecoratorDecl::KeyValue *keyvalue;

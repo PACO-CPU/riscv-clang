@@ -206,7 +206,7 @@ class Sema {
   bool isMultiplexExternalSource;
 
   static bool mightHaveNonExternalLinkage(const DeclaratorDecl *FD);
-  ApproxDecoratorDecl *getApproxDecl(Expr *expr);
+  
   static bool
   shouldLinkPossiblyHiddenDecl(const NamedDecl *Old, const NamedDecl *New) {
     // We are about to link these. It is now safe to compute the linkage of
@@ -3330,7 +3330,11 @@ public:
                                         SourceLocation Loc,
                                         bool GNUSyntax,
                                         ExprResult Init);
-  APValue *getApproxKeyValue(Expr *expr, const char* keyIdent);
+  
+  //PACO additions
+  
+  ApproxDecoratorDecl *getApproxDecl(Expr *expr);
+  APValue *getApproxKeyValue(Expr *expr, std::string keyIdent);
   APValue *getNeglectValue(Expr *expr);
   APValue *getInjectValue(Expr *expr);
   APValue *getRelaxValue(Expr *expr);
@@ -3341,7 +3345,20 @@ public:
                                  std::vector<ApproxDecoratorDecl::KeyValue*> keyvalues, 
                                  ApproxDecoratorDecl::KeyValue *newKey);
   void ActOnApproxMask(Expr *expr, Expr *LHSExpr, Expr *RHSExpr);
+  
+  ApproxDecoratorDecl::KeyValue *ActOnApproxDecoratorKeyValue(
+    IdentifierInfo *ident, ExprResult exprNode, SourceLocation exprLoc);
 
+  ApproxDecoratorDecl *ActOnApproxDecorator(
+    Scope *CurScope,SourceLocation ApproxLoc,
+    ApproxDecoratorDecl::KeyValue **keyvalues, size_t keyvalue_count);
+
+  ApproxDecoratorDecl *ActOnApproxDecorator(
+    Scope *CurScope,SourceLocation ApproxLoc,
+    ApproxDecoratorDecl::KeyValue **keyvalues, size_t keyvalue_count, std::string identifier);
+
+  //End PACO
+  
   ExprResult ActOnBinOp(Scope *S, SourceLocation TokLoc,
                         tok::TokenKind Kind, Expr *LHSExpr, Expr *RHSExpr);
   ExprResult BuildBinOp(Scope *S, SourceLocation OpLoc,
@@ -7241,18 +7258,6 @@ public:
     return CheckCUDATarget(IdentifyCUDATarget(Caller),
                            IdentifyCUDATarget(Callee));
   }
-
-
-  ApproxDecoratorDecl::KeyValue *ActOnApproxDecoratorKeyValue(
-    IdentifierInfo *ident, ExprResult exprNode, SourceLocation exprLoc);
-
-  ApproxDecoratorDecl *ActOnApproxDecorator(
-    Scope *CurScope,SourceLocation ApproxLoc,
-    ApproxDecoratorDecl::KeyValue **keyvalues, size_t keyvalue_count);
-
-  ApproxDecoratorDecl *ActOnApproxDecorator(
-    Scope *CurScope,SourceLocation ApproxLoc,
-    ApproxDecoratorDecl::KeyValue **keyvalues, size_t keyvalue_count, std::string identifier);
 
   /// \name Code completion
   //@{

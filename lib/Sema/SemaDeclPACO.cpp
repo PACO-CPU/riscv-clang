@@ -63,33 +63,33 @@ ApproxDecoratorDecl::KeyValue *ConvertMaskValueToBinaryMask(ApproxDecoratorDecl:
 ApproxDecoratorDecl::KeyValue *ConvertNeglectToMask(ApproxDecoratorDecl::KeyValue *Key) {
   APValue newValue;
   llvm::APSInt aint = llvm::APSInt(7);
-  aint = 0b1111111;
+  aint = PACO::APPROX_PRECISE;
   uint64_t KeyData = *(Key->getNum().getInt().getRawData());
   switch(KeyData) {
     case 2: 
-      aint = 0b1111110;
+      aint = PACO::APPROX_LVL_2;
       break;
     case 4: 
-      aint = 0b1111100;
+      aint = PACO::APPROX_LVL_4;
       break;
     case 7: 
-      aint = 0b1111000;
+      aint = PACO::APPROX_LVL_7;
       break;
     case 10: 
-      aint = 0b1110000;
+      aint = PACO::APPROX_LVL_10;
       break;
     case 15: 
-      aint = 0b1100000;
+      aint = PACO::APPROX_LVL_15;
       break;
     case 20: 
-      aint = 0b1000000;
+      aint = PACO::APPROX_LVL_20;
       break;
     case 27: 
-      aint = 0b0000000;
+      aint = PACO::APPROX_LVL_27;
       break;
   }
 
-  if (aint != 0b1111111) { 
+  if (aint != PACO::APPROX_PRECISE) { 
     newValue = APValue(aint);
   }
   KeyData = *(newValue.getInt().getRawData());
@@ -116,7 +116,7 @@ bool Sema::CheckApproxKeyVaule(SourceLocation ApproxLoc,
                          ApproxDecoratorDecl::KeyValue *newKey) {
     StringRef identName = StringRef(newKey->getIdent());
 
-    if (identName.compare("neglect") == 0) {
+    if (identName.compare(PACO::KV_NEGLECT_AMOUNT) == 0) {
 
       uint64_t num = newKey->getNum().getInt().getZExtValue();
       /* only valid values for neglect are allowed */
@@ -129,47 +129,47 @@ bool Sema::CheckApproxKeyVaule(SourceLocation ApproxLoc,
         StringRef valueName = StringRef(keyvalues[i]->getIdent());
 
         /* Check if neglect already exits */
-        if (valueName.compare("neglect") == 0) {
+        if (valueName.compare(PACO::KV_NEGLECT_AMOUNT) == 0) {
             Diag(ApproxLoc, diag::warn_approx_overide);
             keyvalues[i] = newKey;
             return true;
         /* If mask exits in the same approx decl give an error */
-        } else if(valueName.compare("mask") == 0) {
+        } else if(valueName.compare(PACO::KV_MASK) == 0) {
             Diag(ApproxLoc,diag::err_approx_keyvalue_mask_neglect);
             return true;
         }
       } 
     } 
-    else if (identName.compare("mask") == 0) {
+    else if (identName.compare(PACO::KV_MASK) == 0) {
       for(size_t i=0;i<keyvalues.size();i++) {
         StringRef valueName = StringRef(keyvalues[i]->getIdent());
 
         /* Check if neglect already exits */
-        if (valueName.compare("neglect") == 0) {
+        if (valueName.compare(PACO::KV_NEGLECT_AMOUNT) == 0) {
             Diag(ApproxLoc,diag::err_approx_keyvalue_mask_neglect);
             return true;
         /* If mask exits in the same approx decl give an error */
-        } else if(valueName.compare("mask") == 0) {
+        } else if(valueName.compare(PACO::KV_MASK) == 0) {
             Diag(ApproxLoc, diag::warn_approx_overide);
             keyvalues[i] = newKey;
             return true;
         }
       }
     } 
-    else if (identName.compare("inject") == 0) {
+    else if (identName.compare(PACO::KV_INJECT) == 0) {
       for(size_t i=0;i<keyvalues.size();i++) {
         StringRef valueName = StringRef(keyvalues[i]->getIdent());
-        if(valueName.compare("inject") == 0) {
+        if(valueName.compare(PACO::KV_INJECT) == 0) {
             Diag(ApproxLoc, diag::warn_approx_overide);
             keyvalues[i] = newKey;
             return true;
         }
       }
     } 
-    else if (identName.compare("relax") == 0) {
+    else if (identName.compare(PACO::KV_RELAX) == 0) {
       for(size_t i=0;i<keyvalues.size();i++) {
         StringRef valueName = StringRef(keyvalues[i]->getIdent());
-        if(valueName.compare("relax") == 0) {
+        if(valueName.compare(PACO::KV_RELAX) == 0) {
             Diag(ApproxLoc, diag::warn_approx_overide);
             keyvalues[i] = newKey;
             return true;
@@ -220,11 +220,11 @@ ApproxDecoratorDecl *Sema::ActOnApproxDecorator(
 
   for(size_t i=0;i<keyvalue_count;i++) {
     if (CheckApproxKeyVaule(ApproxLoc, ADec->getKeyValues(), keyvalues[i])) {
-      if(StringRef(keyvalues[i]->getIdent()).compare("neglect") == 0) {
+      if(StringRef(keyvalues[i]->getIdent()).compare(PACO::KV_NEGLECT_AMOUNT) == 0) {
         keyvalues[i] = ConvertNeglectToMask(keyvalues[i]);
-      } else if (StringRef(keyvalues[i]->getIdent()).compare("mask") == 0) {
+      } else if (StringRef(keyvalues[i]->getIdent()).compare(PACO::KV_MASK) == 0) {
         keyvalues[i] = ConvertMaskValueToBinaryMask(keyvalues[i]);
-      } else if (StringRef(keyvalues[i]->getIdent()).compare("relax") == 0) {
+      } else if (StringRef(keyvalues[i]->getIdent()).compare(PACO::KV_RELAX) == 0) {
         has_relax = true;
       }
       ADec->appendKeyValue(keyvalues[i]);
@@ -233,7 +233,7 @@ ApproxDecoratorDecl *Sema::ActOnApproxDecorator(
 
   if(!has_relax) {
     llvm::APSInt val = llvm::APSInt(1);val = 1;
-    ADec->appendKeyValue(new ApproxDecoratorDecl::KeyValue(std::string("relax"),
+    ADec->appendKeyValue(new ApproxDecoratorDecl::KeyValue(PACO::KV_RELAX,
                                                            APValue(val)));
   }
 

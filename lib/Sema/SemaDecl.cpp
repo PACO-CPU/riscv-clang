@@ -12080,3 +12080,13 @@ AvailabilityResult Sema::getCurContextAvailability() const {
   const Decl *D = cast<Decl>(getCurObjCLexicalContext());
   return D->getAvailability();
 }
+
+void Sema::ActOnPragmaPACOCombine(Sema::PragmaPACOCombineMode Mode)
+{
+    PACOCombineMode = Mode;
+}
+
+void Sema::ActOnPragmaPACOIntermediateLiteral(Sema::PragmaPACOIntermediateLiteralMode Mode)
+{
+    PACOIntermediateLiteralMode = Mode;
+}

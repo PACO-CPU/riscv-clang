@@ -27,6 +27,7 @@
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/MDBuilder.h"
 #include "llvm/IR/Operator.h"
+#include "clang/Sema/PACO.h"
 using namespace clang;
 using namespace CodeGen;
 
@@ -656,7 +657,7 @@ void CodeGenFunction::GenerateCode(GlobalDecl GD, llvm::Function *Fn,
     if(AD!=NULL) {
       std::vector<ApproxDecoratorDecl::KeyValue*> KVs = AD->getKeyValues();
       for(size_t i=0;i<KVs.size();i++) {
-        if((StringRef((KVs[i]->getIdent()))).compare("strategy") == 0) {
+        if((StringRef((KVs[i]->getIdent()))).compare(PACO::KV_STRATEGY) == 0) {
           stopEmit = true;
         }
       }

@@ -41,6 +41,7 @@
 #include "clang/Sema/ScopeInfo.h"
 #include "clang/Sema/SemaFixItUtils.h"
 #include "clang/Sema/Template.h"
+#include "clang/Sema/PACO.h"
 using namespace clang;
 using namespace sema;
 
@@ -8668,7 +8669,7 @@ ApproxDecoratorDecl *Sema::getApproxDecl(Expr *expr) {
   return NULL;
 }
 
-APValue *Sema::getApproxKeyValue(Expr *expr, const char* keyIdent) {
+APValue *Sema::getApproxKeyValue(Expr *expr, std::string keyIdent) {
   ApproxDecoratorDecl *ApproxDecl = getApproxDecl(expr);
   APValue *result = NULL;
   if(ApproxDecl != NULL) {
@@ -8683,18 +8684,18 @@ APValue *Sema::getApproxKeyValue(Expr *expr, const char* keyIdent) {
   return result;
 }
 APValue *Sema::getNeglectValue(Expr *expr) {
-  APValue * neglectValue = getApproxKeyValue(expr, "neglect");
-  APValue *maskValue = getApproxKeyValue(expr, "mask");
+  APValue * neglectValue = getApproxKeyValue(expr, PACO::KV_NEGLECT_AMOUNT);
+  APValue *maskValue = getApproxKeyValue(expr, PACO::KV_MASK);
   if(neglectValue != NULL)
     return neglectValue;
   else
     return maskValue;
 }
 APValue *Sema::getInjectValue(Expr *expr) {
-  return getApproxKeyValue(expr, "inject");
+  return getApproxKeyValue(expr, PACO::KV_INJECT);
 }
 APValue *Sema::getRelaxValue(Expr *expr) {
-  return getApproxKeyValue(expr, "relax");
+  return getApproxKeyValue(expr, PACO::KV_RELAX);
 }
 
 bool Sema::CheckImmediate(Expr *expr) {
@@ -8719,7 +8720,7 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
     if(leftIsImmediate) {
       switch(PACOIntermediateLiteralMode){
         case(Sema::PPACOILM_Precise): {
-          leftInjectMask = 0b1111111; //all precise
+          leftInjectMask = PACO::APPROX_PRECISE; //all precise
           break;
         }
         case(Sema::PPACOILM_Mimic): {
@@ -8730,10 +8731,10 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
               leftInjectMask = *(testVal->getInt().getRawData());
             }
             else
-              leftInjectMask = 0b1111111; //all precise
+              leftInjectMask = PACO::APPROX_PRECISE; //all precise
           }
           else {
-            leftInjectMask = 0b1111111; //all precise
+            leftInjectMask = PACO::APPROX_PRECISE; //all precise
           }
           break;
         }
@@ -8744,7 +8745,7 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
       if(testVal!=NULL)
         leftInjectMask = *(testVal->getInt().getRawData());
       else
-        leftInjectMask = 0b1111111; //all precise
+        leftInjectMask = PACO::APPROX_PRECISE; //all precise
     }
   }
   else {
@@ -8752,13 +8753,13 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
     if(testVal!=NULL)
       leftInjectMask = *(testVal->getInt().getRawData());
     else
-    leftInjectMask = 0b1111111; //all precise
+    leftInjectMask = PACO::APPROX_PRECISE; //all precise
   }
   if(ExprIsLeaf(RHSExpr)) {
     if(rightIsImmediate) {
       switch(PACOIntermediateLiteralMode){
         case(Sema::PPACOILM_Precise): {
-          rightInjectMask = 0b1111111; //all precise
+          rightInjectMask = PACO::APPROX_PRECISE; //all precise
           break;
         }
         case(Sema::PPACOILM_Mimic): {
@@ -8768,10 +8769,10 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
             if(testVal!=NULL)
               rightInjectMask = *(testVal->getInt().getRawData());
             else
-              rightInjectMask = 0b1111111; //all precise
+              rightInjectMask = PACO::APPROX_PRECISE; //all precise
           }
           else {
-            rightInjectMask = 0b1111111; //all precise
+            rightInjectMask = PACO::APPROX_PRECISE; //all precise
           }
           break;
         }
@@ -8782,7 +8783,7 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
       if(testVal!=NULL)
         rightInjectMask = *(testVal->getInt().getRawData());
       else
-        rightInjectMask = 0b1111111; //all precise
+        rightInjectMask = PACO::APPROX_PRECISE; //all precise
     }
   }
   else {
@@ -8790,7 +8791,7 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
     if(testVal!=NULL)
       rightInjectMask = *(testVal->getInt().getRawData());
     else
-      rightInjectMask = 0b1111111; //all precise
+      rightInjectMask = PACO::APPROX_PRECISE; //all precise
   }
 
   //Compare both variables and assign the injectmask depending on pragma paco comine
@@ -8820,7 +8821,7 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
     relaxMask = *(relaxAPValue->getInt().getRawData());
   }
   else {
-    relaxMask = 0b1111111; //all precise
+    relaxMask = PACO::APPROX_PRECISE; //all precise
   }
   //Test if injectMask fits into relaxMask
   if((relaxMask&injectMask)==relaxMask) {

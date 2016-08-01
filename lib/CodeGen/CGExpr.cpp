@@ -30,6 +30,7 @@
 #include "llvm/Support/ConvertUTF.h"
 #include "llvm/IR/Module.h"
 #include <uuid/uuid.h>
+#include "clang/Sema/PACO.h"
 
 using namespace clang;
 using namespace CodeGen;
@@ -2936,7 +2937,7 @@ RValue CodeGenFunction::EmitCallExpr(const CallExpr *E,
     if(AD!=NULL) {
       std::vector<ApproxDecoratorDecl::KeyValue*> KVs = AD->getKeyValues();
       for(size_t i=0;i<KVs.size();i++) {
-        if((StringRef((KVs[i]->getIdent()))).compare("strategy") == 0) {
+        if((StringRef((KVs[i]->getIdent()))).compare(PACO::KV_STRATEGY) == 0) {
           const Expr * const*ArgExprs = E->getArgs();
           llvm::Value *v1;
           llvm::Value *v2;
@@ -2981,6 +2982,7 @@ RValue CodeGenFunction::EmitCallExpr(const CallExpr *E,
               if(E->getNumArgs()>2) {
                 if(E->getNumArgs()>3) {
                   // more than 3 args, error
+                  CGM.Error(E->getLocStart(), llvm::StringRef("usage of 'strategy = lut' is not possible with more than three arguments"));
                 }
                 // 3 args
                 v1 = EmitScalarExpr(ArgExprs[0]);
@@ -2993,8 +2995,7 @@ RValue CodeGenFunction::EmitCallExpr(const CallExpr *E,
               }
               else {
                 // 2 args
-                //TODOPACO: This case does not exist, because we only use LUTE (one input) and LUTE3 (3 inputs)
-                //print warning
+                CGM.Error(E->getLocStart(), llvm::StringRef("usage of 'strategy = lut' is not possible with two arguments. Please use one (for lute) or three (for lute3)"));
               }
             }
             else {

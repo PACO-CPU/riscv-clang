@@ -29,6 +29,7 @@
 #include "llvm/IR/Module.h"
 #include "llvm/Support/CFG.h"
 #include <cstdarg>
+#include "clang/Sema/PACO.h"
 
 using namespace clang;
 using namespace CodeGen;
@@ -2401,12 +2402,12 @@ Value *ScalarExprEmitter::EmitAdd(const BinOpInfo &op) {
       return Builder.CreateAdd(op.LHS, op.RHS, "add");
     case LangOptions::SOB_Undefined:
       if (!CGF.SanOpts->SignedIntegerOverflow) {
-	// PACO: Creating the approx add node      
+        // PACO: Creating the approx add node      
         if (op.E->getNeglectMask()) {
           uint32_t neglectVal = op.E->getNeglectMask()->getInt()
                                 .getZExtValue();
           // Is this neglect mask not precise?
-	  if (neglectVal != 0b1111111) {  
+          if (neglectVal != PACO::APPROX_PRECISE) {
             neglectVal = neglectVal >> 1; /* the last bit is implicit */
             llvm::ConstantInt *constInt = Builder.getInt32(neglectVal);
             return Builder.CreateCall3(CGF.CGM.getIntrinsic(
@@ -2414,7 +2415,7 @@ Value *ScalarExprEmitter::EmitAdd(const BinOpInfo &op) {
                                        op.LHS, op.RHS, constInt);
           } 
         }
-	// PACO: Modification End
+        // PACO: Modification End
         return Builder.CreateNSWAdd(op.LHS, op.RHS, "add");
      }
       // Fall through.
@@ -2447,11 +2448,11 @@ Value *ScalarExprEmitter::EmitSub(const BinOpInfo &op) {
       case LangOptions::SOB_Undefined:
         if (!CGF.SanOpts->SignedIntegerOverflow) {
           // PACO: Creating the approx sub node
-	  if (op.E->getNeglectMask()) {
+          if (op.E->getNeglectMask()) {
             uint32_t neglectVal = op.E->getNeglectMask()->getInt()
                                     .getZExtValue();
-	    // Is this neglect mask not precise?
-            if (neglectVal != 0b1111111) {
+            // Is this neglect mask not precise?
+            if (neglectVal != PACO::APPROX_PRECISE) {
               neglectVal = neglectVal >> 1; /* the last bit is implicit */
               llvm::ConstantInt *constInt = Builder.getInt32(neglectVal);
               return Builder.CreateCall3(CGF.CGM.getIntrinsic(
@@ -2459,7 +2460,7 @@ Value *ScalarExprEmitter::EmitSub(const BinOpInfo &op) {
                                          op.LHS, op.RHS, constInt);
             } 
           }
-	  // PACO: End of modification
+          // PACO: End of modification
           return Builder.CreateNSWSub(op.LHS, op.RHS, "sub");
           
         }
