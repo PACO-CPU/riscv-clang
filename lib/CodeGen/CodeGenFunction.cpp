@@ -647,7 +647,7 @@ static void TryMarkNoThrow(llvm::Function *F) {
 
 void CodeGenFunction::GenerateCode(GlobalDecl GD, llvm::Function *Fn,
                                    const CGFunctionInfo &FnInfo) {
-  
+  const FunctionDecl *FD = cast<FunctionDecl>(GD.getDecl());
   //PACO addition
   //Remove emitting the function definition when it is replaced by the LUT compiler
   bool stopEmit = false;
@@ -664,7 +664,6 @@ void CodeGenFunction::GenerateCode(GlobalDecl GD, llvm::Function *Fn,
   }
   if(!stopEmit) {
     //end PACO
-    const FunctionDecl *FD = cast<FunctionDecl>(GD.getDecl());
 
     // Check if we should generate debug info for this function.
     if (!FD->hasAttr<NoDebugAttr>())
