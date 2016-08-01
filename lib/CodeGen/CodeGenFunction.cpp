@@ -647,107 +647,106 @@ static void TryMarkNoThrow(llvm::Function *F) {
 
 void CodeGenFunction::GenerateCode(GlobalDecl GD, llvm::Function *Fn,
                                    const CGFunctionInfo &FnInfo) {
-  const FunctionDecl *FD = cast<FunctionDecl>(GD.getDecl());
-
-  // Check if we should generate debug info for this function.
-  if (!FD->hasAttr<NoDebugAttr>())
-    maybeInitializeDebugInfo();
-
-  FunctionArgList Args;
-  QualType ResTy = FD->getResultType();
-
-  CurGD = GD;
-  if (isa<CXXMethodDecl>(FD) && cast<CXXMethodDecl>(FD)->isInstance())
-    CGM.getCXXABI().BuildInstanceFunctionParams(*this, ResTy, Args);
-
-  for (unsigned i = 0, e = FD->getNumParams(); i != e; ++i)
-    Args.push_back(FD->getParamDecl(i));
-
-  SourceRange BodyRange;
-  if (Stmt *Body = FD->getBody()) BodyRange = Body->getSourceRange();
-
-  // CalleeWithThisReturn keeps track of the last callee inside this function
-  // that returns 'this'. Before starting the function, we set it to null.
-  CalleeWithThisReturn = 0;
-
-  // Emit the standard function prologue.
-  StartFunction(GD, ResTy, Fn, FnInfo, Args, BodyRange.getBegin());
-
-  // Generate the body of the function.
-  if (isa<CXXDestructorDecl>(FD))
-    EmitDestructorBody(Args);
-  else if (isa<CXXConstructorDecl>(FD))
-    EmitConstructorBody(Args);
-  else if (getLangOpts().CUDA &&
-           !CGM.getCodeGenOpts().CUDAIsDevice &&
-           FD->hasAttr<CUDAGlobalAttr>())
-    CGM.getCUDARuntime().EmitDeviceStubBody(*this, Args);
-  else if (isa<CXXConversionDecl>(FD) &&
-           cast<CXXConversionDecl>(FD)->isLambdaToBlockPointerConversion()) {
-    // The lambda conversion to block pointer is special; the semantics can't be
-    // expressed in the AST, so IRGen needs to special-case it.
-    EmitLambdaToBlockPointerBody(Args);
-  } else if (isa<CXXMethodDecl>(FD) &&
-             cast<CXXMethodDecl>(FD)->isLambdaStaticInvoker()) {
-    // The lambda "__invoke" function is special, because it forwards or
-    // clones the body of the function call operator (but is actually static).
-    EmitLambdaStaticInvokeFunction(cast<CXXMethodDecl>(FD));
-  } else if (FD->isDefaulted() && isa<CXXMethodDecl>(FD) &&
-             cast<CXXMethodDecl>(FD)->isCopyAssignmentOperator()) {
-    // Implicit copy-assignment gets the same special treatment as implicit
-    // copy-constructors.
-    emitImplicitAssignmentOperatorBody(Args);
-  }
-  else {
-    //PACO addition
-    //Remove function body when it is replaced by the LUT compiler
-    if(getLangOpts().PACO) {
-      bool stopEmit = false;
-      ApproxDecoratorDecl *AD = FD->GetApproxDecorator();
-      if(AD!=NULL) {
-        std::vector<ApproxDecoratorDecl::KeyValue*> KVs = AD->getKeyValues();
-        for(size_t i=0;i<KVs.size();i++) {
-          if((StringRef((KVs[i]->getIdent()))).compare("strategy") == 0) {
-            stopEmit = true;
-          }
+  
+  //PACO addition
+  //Remove emitting the function definition when it is replaced by the LUT compiler
+  bool stopEmit = false;
+  if(getLangOpts().PACO) {
+    ApproxDecoratorDecl *AD = FD->GetApproxDecorator();
+    if(AD!=NULL) {
+      std::vector<ApproxDecoratorDecl::KeyValue*> KVs = AD->getKeyValues();
+      for(size_t i=0;i<KVs.size();i++) {
+        if((StringRef((KVs[i]->getIdent()))).compare("strategy") == 0) {
+          stopEmit = true;
         }
       }
-      if(!stopEmit)
-        EmitFunctionBody(Args);
     }
-    else
-      //end PACO
+  }
+  if(!stopEmit) {
+    //end PACO
+    const FunctionDecl *FD = cast<FunctionDecl>(GD.getDecl());
+
+    // Check if we should generate debug info for this function.
+    if (!FD->hasAttr<NoDebugAttr>())
+      maybeInitializeDebugInfo();
+
+    FunctionArgList Args;
+    QualType ResTy = FD->getResultType();
+
+    CurGD = GD;
+    if (isa<CXXMethodDecl>(FD) && cast<CXXMethodDecl>(FD)->isInstance())
+      CGM.getCXXABI().BuildInstanceFunctionParams(*this, ResTy, Args);
+
+    for (unsigned i = 0, e = FD->getNumParams(); i != e; ++i)
+      Args.push_back(FD->getParamDecl(i));
+
+    SourceRange BodyRange;
+    if (Stmt *Body = FD->getBody()) BodyRange = Body->getSourceRange();
+
+    // CalleeWithThisReturn keeps track of the last callee inside this function
+    // that returns 'this'. Before starting the function, we set it to null.
+    CalleeWithThisReturn = 0;
+
+    // Emit the standard function prologue.
+    StartFunction(GD, ResTy, Fn, FnInfo, Args, BodyRange.getBegin());
+
+    // Generate the body of the function.
+    if (isa<CXXDestructorDecl>(FD))
+      EmitDestructorBody(Args);
+    else if (isa<CXXConstructorDecl>(FD))
+      EmitConstructorBody(Args);
+    else if (getLangOpts().CUDA &&
+             !CGM.getCodeGenOpts().CUDAIsDevice &&
+             FD->hasAttr<CUDAGlobalAttr>())
+      CGM.getCUDARuntime().EmitDeviceStubBody(*this, Args);
+    else if (isa<CXXConversionDecl>(FD) &&
+             cast<CXXConversionDecl>(FD)->isLambdaToBlockPointerConversion()) {
+      // The lambda conversion to block pointer is special; the semantics can't be
+      // expressed in the AST, so IRGen needs to special-case it.
+      EmitLambdaToBlockPointerBody(Args);
+    } else if (isa<CXXMethodDecl>(FD) &&
+               cast<CXXMethodDecl>(FD)->isLambdaStaticInvoker()) {
+      // The lambda "__invoke" function is special, because it forwards or
+      // clones the body of the function call operator (but is actually static).
+      EmitLambdaStaticInvokeFunction(cast<CXXMethodDecl>(FD));
+    } else if (FD->isDefaulted() && isa<CXXMethodDecl>(FD) &&
+               cast<CXXMethodDecl>(FD)->isCopyAssignmentOperator()) {
+      // Implicit copy-assignment gets the same special treatment as implicit
+      // copy-constructors.
+      emitImplicitAssignmentOperatorBody(Args);
+    }
+    else 
       EmitFunctionBody(Args);
+
+    // C++11 [stmt.return]p2:
+    //   Flowing off the end of a function [...] results in undefined behavior in
+    //   a value-returning function.
+    // C11 6.9.1p12:
+    //   If the '}' that terminates a function is reached, and the value of the
+    //   function call is used by the caller, the behavior is undefined.
+    if (getLangOpts().CPlusPlus && !FD->hasImplicitReturnZero() &&
+        !FD->getResultType()->isVoidType() && Builder.GetInsertBlock()) {
+      if (SanOpts->Return)
+        EmitCheck(Builder.getFalse(), "missing_return",
+                  EmitCheckSourceLocation(FD->getLocation()),
+                  ArrayRef<llvm::Value *>(), CRK_Unrecoverable);
+      else if (CGM.getCodeGenOpts().OptimizationLevel == 0)
+        Builder.CreateCall(CGM.getIntrinsic(llvm::Intrinsic::trap));
+      Builder.CreateUnreachable();
+      Builder.ClearInsertionPoint();
+    }
+
+    // Emit the standard function epilogue.
+    FinishFunction(BodyRange.getEnd());
+    // CalleeWithThisReturn keeps track of the last callee inside this function
+    // that returns 'this'. After finishing the function, we set it to null.
+    CalleeWithThisReturn = 0;
+
+    // If we haven't marked the function nothrow through other means, do
+    // a quick pass now to see if we can.
+    if (!CurFn->doesNotThrow())
+      TryMarkNoThrow(CurFn);
   }
-
-  // C++11 [stmt.return]p2:
-  //   Flowing off the end of a function [...] results in undefined behavior in
-  //   a value-returning function.
-  // C11 6.9.1p12:
-  //   If the '}' that terminates a function is reached, and the value of the
-  //   function call is used by the caller, the behavior is undefined.
-  if (getLangOpts().CPlusPlus && !FD->hasImplicitReturnZero() &&
-      !FD->getResultType()->isVoidType() && Builder.GetInsertBlock()) {
-    if (SanOpts->Return)
-      EmitCheck(Builder.getFalse(), "missing_return",
-                EmitCheckSourceLocation(FD->getLocation()),
-                ArrayRef<llvm::Value *>(), CRK_Unrecoverable);
-    else if (CGM.getCodeGenOpts().OptimizationLevel == 0)
-      Builder.CreateCall(CGM.getIntrinsic(llvm::Intrinsic::trap));
-    Builder.CreateUnreachable();
-    Builder.ClearInsertionPoint();
-  }
-
-  // Emit the standard function epilogue.
-  FinishFunction(BodyRange.getEnd());
-  // CalleeWithThisReturn keeps track of the last callee inside this function
-  // that returns 'this'. After finishing the function, we set it to null.
-  CalleeWithThisReturn = 0;
-
-  // If we haven't marked the function nothrow through other means, do
-  // a quick pass now to see if we can.
-  if (!CurFn->doesNotThrow())
-    TryMarkNoThrow(CurFn);
 }
 
 /// ContainsLabel - Return true if the statement contains a label in it.  If

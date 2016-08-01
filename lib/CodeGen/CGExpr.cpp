@@ -29,6 +29,7 @@
 #include "llvm/IR/MDBuilder.h"
 #include "llvm/Support/ConvertUTF.h"
 #include "llvm/IR/Module.h"
+#include <uuid/uuid.h>
 
 using namespace clang;
 using namespace CodeGen;
@@ -2933,23 +2934,48 @@ RValue CodeGenFunction::EmitCallExpr(const CallExpr *E,
   if(FD!=NULL) {
     ApproxDecoratorDecl *AD = FD->GetApproxDecorator();
     if(AD!=NULL) {
-      ASTContext* cont = &getContext();
       std::vector<ApproxDecoratorDecl::KeyValue*> KVs = AD->getKeyValues();
       for(size_t i=0;i<KVs.size();i++) {
         if((StringRef((KVs[i]->getIdent()))).compare("strategy") == 0) {
           const Expr * const*ArgExprs = E->getArgs();
-          llvm::Value *UUID;
           llvm::Value *v1;
           llvm::Value *v2;
           llvm::Value *v3;
-          StringRef UUID_Ref;
-          UUID_Ref = StringRef(AD->GetLutId());
-          UUID_Ref = StringRef("test");
-          StringLiteral* UUID_Literal;
-          UUID_Literal = StringLiteral::Create(getContext(), UUID_Ref, StringLiteral::Ascii, false, cont->getPointerType(cont->CharTy), SourceLocation());
-          // TODOPACO: solve error in this line
-          //UUID = CGM.GetAddrOfConstantStringFromLiteral(UUID_Literal);
+          std::string UUID_Str;
+          UUID_Str = AD->GetLutId();
+          uuid_t UUID_Rep;
+          uuid_parse(UUID_Str.c_str(), UUID_Rep);
           
+          //UUID for 128 Bit .ll, not implemented for target code generation
+          //__int128_t UUID_Int = *reinterpret_cast<__int128_t*>(UUID_Rep);
+          //uint64_t  UUID_Array[2];
+          //UUID_Array[0] = UUID_Int;
+          //UUID_Array[1] = UUID_Int>>64;
+          //llvm::APInt* UUID_APInt;
+          //UUID_APInt = new llvm::APInt(128, ArrayRef<uint64_t>(UUID_Array,2));
+          //llvm::Constant *UUID;
+          //UUID = llvm::ConstantInt::get(llvm::IntegerType::get(getLLVMContext(), 128), *(const_cast<llvm::APInt*>(UUID_APInt)));
+          unsigned char *convertInt128 = reinterpret_cast<unsigned char*>(UUID_Rep);
+          uint64_t UUID_Int1 = ((convertInt128[0] << 24) | (convertInt128[1] << 16) | (convertInt128[2] << 8) | (convertInt128[3] << 0)) & 0x00000000FFFFFFFF;
+          uint64_t UUID_Int2 = ((convertInt128[4] << 24) | (convertInt128[5] << 16) | (convertInt128[6] << 8) | (convertInt128[7] << 0)) & 0x00000000FFFFFFFF;
+          uint64_t UUID_Int3 = ((convertInt128[8] << 24) | (convertInt128[9] << 16) | (convertInt128[10] << 8) | (convertInt128[11] << 0)) & 0x00000000FFFFFFFF;
+          uint64_t UUID_Int4 = ((convertInt128[12] << 24) | (convertInt128[13] << 16) | (convertInt128[14] << 8) | (convertInt128[15] << 0)) & 0x00000000FFFFFFFF;
+          llvm::APInt* UUID_APInt_1;
+          llvm::APInt* UUID_APInt_2;
+          llvm::APInt* UUID_APInt_3;
+          llvm::APInt* UUID_APInt_4;
+          UUID_APInt_1 = new llvm::APInt(32, UUID_Int1, false);
+          UUID_APInt_2 = new llvm::APInt(32, UUID_Int2, false);
+          UUID_APInt_3 = new llvm::APInt(32, UUID_Int3, false);
+          UUID_APInt_4 = new llvm::APInt(32, UUID_Int4, false);
+          llvm::Constant *UUID_1;
+          llvm::Constant *UUID_2;
+          llvm::Constant *UUID_3;
+          llvm::Constant *UUID_4;
+          UUID_1 = llvm::ConstantInt::get(llvm::IntegerType::get(getLLVMContext(), 32), *(const_cast<llvm::APInt*>(UUID_APInt_1)));
+          UUID_2 = llvm::ConstantInt::get(llvm::IntegerType::get(getLLVMContext(), 32), *(const_cast<llvm::APInt*>(UUID_APInt_2)));
+          UUID_3 = llvm::ConstantInt::get(llvm::IntegerType::get(getLLVMContext(), 32), *(const_cast<llvm::APInt*>(UUID_APInt_3)));
+          UUID_4 = llvm::ConstantInt::get(llvm::IntegerType::get(getLLVMContext(), 32), *(const_cast<llvm::APInt*>(UUID_APInt_4)));
           if(E->getNumArgs()>0) {
             if(E->getNumArgs()>1) {
               if(E->getNumArgs()>2) {
@@ -2960,9 +2986,10 @@ RValue CodeGenFunction::EmitCallExpr(const CallExpr *E,
                 v1 = EmitScalarExpr(ArgExprs[0]);
                 v2 = EmitScalarExpr(ArgExprs[1]);
                 v3 = EmitScalarExpr(ArgExprs[2]);
-                return RValue::get(Builder.CreateCall4(CGM.getIntrinsic(
-                    llvm::Intrinsic::riscv_lute3), v1, v2, 
-                    v3, UUID, llvm::Twine(FD->getName().str().c_str())));
+                llvm::Value *Arg_Array[]= {v1, v2, v3, UUID_1, UUID_2, UUID_3, UUID_4};
+                ArrayRef<llvm::Value *> Args = Arg_Array;
+                return RValue::get(Builder.CreateCall(CGM.getIntrinsic(
+                    llvm::Intrinsic::riscv_lute3), Args, llvm::Twine(FD->getName().str().c_str())));
               }
               else {
                 // 2 args
@@ -2973,8 +3000,11 @@ RValue CodeGenFunction::EmitCallExpr(const CallExpr *E,
             else {
               //1 arg
               v1 = EmitScalarExpr(ArgExprs[0]);
-              return RValue::get(Builder.CreateCall2(CGM.getIntrinsic(
-                  llvm::Intrinsic::riscv_lute), v1, UUID, llvm::Twine(FD->getName().str().c_str())));
+              llvm::Value *Arg_Array[] = {v1, UUID_1, UUID_2, UUID_3, UUID_4};
+              ArrayRef<llvm::Value *> Args;
+              Args = Arg_Array;
+              return RValue::get(Builder.CreateCall(CGM.getIntrinsic(
+                  llvm::Intrinsic::riscv_lute), Args, llvm::Twine(FD->getName().str().c_str())));
             }
           }
         }
