@@ -2942,6 +2942,8 @@ RValue CodeGenFunction::EmitCallExpr(const CallExpr *E,
           llvm::Value *v1;
           llvm::Value *v2;
           llvm::Value *v3;
+          llvm::Value *strange;
+          llvm::Value *charm;
           std::string UUID_Str;
           UUID_Str = AD->GetLutId();
           uuid_t UUID_Rep;
@@ -3001,7 +3003,9 @@ RValue CodeGenFunction::EmitCallExpr(const CallExpr *E,
             else {
               //1 arg
               v1 = EmitScalarExpr(ArgExprs[0]);
-              llvm::Value *Arg_Array[] = {v1, UUID_1, UUID_2, UUID_3, UUID_4};
+              strange = llvm::ConstantInt::get(llvm::IntegerType::get(getLLVMContext(), 32), *(const_cast<llvm::APInt*>(new llvm::APInt(32, 0, false))));
+              charm = llvm::ConstantInt::get(llvm::IntegerType::get(getLLVMContext(), 32), *(const_cast<llvm::APInt*>(new llvm::APInt(32, 0, false))));
+              llvm::Value *Arg_Array[] = {v1, UUID_1, UUID_2, UUID_3, UUID_4, strange, charm};
               ArrayRef<llvm::Value *> Args;
               Args = Arg_Array;
               return RValue::get(Builder.CreateCall(CGM.getIntrinsic(

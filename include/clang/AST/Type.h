@@ -560,11 +560,18 @@ public:
   QualType() {}
 
   QualType(const Type *Ptr, unsigned Quals)
-    : Value(Ptr, Quals) {}
+    : Value(Ptr, Quals) {
+      // Remember approx decl on redefinition
+      const QualType *qt ;
+      if((qt = ((const QualType*)Ptr))) {
+        ADD = qt->GetApproxDecorator();
+      }
+    }
   QualType(const ExtQuals *Ptr, unsigned Quals)
     : Value(Ptr, Quals) {}
   
   ApproxDecoratorDecl *GetApproxDecorator() {return ADD;}
+  ApproxDecoratorDecl *GetApproxDecorator() const {return (const_cast<QualType*>(this)->GetApproxDecorator());};
   void SetApproxDecorator(ApproxDecoratorDecl *approx) {ADD = approx;}
 
   unsigned getLocalFastQualifiers() const { return Value.getInt(); }
@@ -589,6 +596,10 @@ public:
   static QualType getFromOpaquePtr(const void *Ptr) {
     QualType T;
     T.Value.setFromOpaqueValue(const_cast<void*>(Ptr));
+    const QualType *orig;
+    const Type *ut = T.getTypePtrUnsafe();
+    orig = (const QualType*)ut;
+    T.SetApproxDecorator(orig->GetApproxDecorator());
     return T;
   }
 

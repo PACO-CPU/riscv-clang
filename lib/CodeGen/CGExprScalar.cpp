@@ -410,8 +410,23 @@ public:
       case LangOptions::SOB_Defined:
         return Builder.CreateMul(Ops.LHS, Ops.RHS, "mul");
       case LangOptions::SOB_Undefined:
-        if (!CGF.SanOpts->SignedIntegerOverflow)
+        if (!CGF.SanOpts->SignedIntegerOverflow) {
+          // PACO: Creating the approx add node      
+          if (op.E->getNeglectMask()) {
+            uint32_t neglectVal = Ops.E->getNeglectMask()->getInt()
+                                  .getZExtValue();
+            // Is this neglect mask not precise?
+            if (neglectVal != PACO::APPROX_PRECISE) {
+              neglectVal = neglectVal >> 1; /* the last bit is implicit */
+              llvm::ConstantInt *constInt = Builder.getInt32(neglectVal);
+              return Builder.CreateCall3(CGF.CGM.getIntrinsic(
+                                         llvm::Intrinsic::int_riscv_mul_approx_op64), 
+                                         Ops.LHS, Ops.RHS, constInt);
+            } 
+          }
+          // PACO: Modification End
           return Builder.CreateNSWMul(Ops.LHS, Ops.RHS, "mul");
+        }
         // Fall through.
       case LangOptions::SOB_Trapping:
         return EmitOverflowCheckedBinOp(Ops);
@@ -2411,7 +2426,7 @@ Value *ScalarExprEmitter::EmitAdd(const BinOpInfo &op) {
             neglectVal = neglectVal >> 1; /* the last bit is implicit */
             llvm::ConstantInt *constInt = Builder.getInt32(neglectVal);
             return Builder.CreateCall3(CGF.CGM.getIntrinsic(
-                                       llvm::Intrinsic::riscv_add_approx), 
+                                       llvm::Intrinsic::riscv_add_approx_op64), 
                                        op.LHS, op.RHS, constInt);
           } 
         }
@@ -2456,7 +2471,7 @@ Value *ScalarExprEmitter::EmitSub(const BinOpInfo &op) {
               neglectVal = neglectVal >> 1; /* the last bit is implicit */
               llvm::ConstantInt *constInt = Builder.getInt32(neglectVal);
               return Builder.CreateCall3(CGF.CGM.getIntrinsic(
-                                         llvm::Intrinsic::riscv_sub_approx), 
+                                         llvm::Intrinsic::riscv_sub_approx_op64), 
                                          op.LHS, op.RHS, constInt);
             } 
           }

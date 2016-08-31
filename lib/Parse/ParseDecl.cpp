@@ -2564,6 +2564,10 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
         ParsedType T = getTypeAnnotation(Tok);
         isInvalid = DS.SetTypeSpecType(DeclSpec::TST_typename, Loc, PrevSpec,
                                        DiagID, T);
+        if(getLangOpts().PACO) {
+          QualType qt = QualType::getFromOpaquePtr(Tok.getAnnotationValue());
+          DS.SetApproxDecorator(qt.GetApproxDecorator(), Loc, PrevSpec, DiagID);
+        }
       } else
         DS.SetTypeSpecError();
 
@@ -5806,13 +5810,17 @@ std::string Parser::ParseLutStrategy() {
       //Create a diag for expecting a specific input value
     }
   }
+  //Get path from source file to write the input file for the LUT-compiler 
+  //in the same directory where the original source file is
+  std::string sourcePath = PP.getCurrentFileLexer()->getFileEntry()->getDir()->getName();
+  sourcePath = sourcePath + "/"; //mising / at path end
   
-  std::string filename = strId + ".input";	  
+  std::string filename = sourcePath + strId + ".input";	  
   //Wrting the stuff to file
   std::ofstream out(filename.c_str());
 
   //Printing the stuff
-  std::string header = "name = " + strId + "\n";
+  std::string header = "name = \"" + strId + "\"\n";
   header = header + PACO::KV_NUM_SEGMENTS + " = " + numSegments + "\n";
   header = header + PACO::KV_BOUNDS + " = " + bounds + "\n";
   header = header + PACO::KV_SEGMENTS + " = " + segments + "\n";

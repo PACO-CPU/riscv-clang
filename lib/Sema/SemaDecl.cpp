@@ -4242,7 +4242,9 @@ NamedDecl *Sema::HandleDeclarator(Scope *S, Declarator &D,
   //PACO remember approx decl for functions
   if(getLangOpts().PACO) {
     ApproxDecoratorDecl *ad = (D.getDeclSpec().GetApproxDecorator());
-    New->SetApproxDecorator(ad);
+    if(ad!=NULL){
+      New->SetApproxDecorator(ad);
+    }
   }
 
   return New;
@@ -4451,6 +4453,12 @@ Sema::ActOnTypedefDeclarator(Scope* S, Declarator& D, DeclContext* DC,
   bool Redeclaration = D.isRedeclaration();
   NamedDecl *ND = ActOnTypedefNameDecl(S, DC, NewTD, Previous, Redeclaration);
   D.setRedeclaration(Redeclaration);
+  if(getLangOpts().PACO) {
+    // Add approx decl
+    ND->SetApproxDecorator(D.getDeclSpec().GetApproxDecorator());
+    TypedefDecl *td = (reinterpret_cast<TypedefDecl*>(ND));
+    td->getTypeSourceInfo()->getType().SetApproxDecorator(D.getDeclSpec().GetApproxDecorator());
+  }
   return ND;
 }
 

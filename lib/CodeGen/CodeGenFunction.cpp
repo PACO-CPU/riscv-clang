@@ -657,7 +657,7 @@ void CodeGenFunction::GenerateCode(GlobalDecl GD, llvm::Function *Fn,
     if(AD!=NULL) {
       std::vector<ApproxDecoratorDecl::KeyValue*> KVs = AD->getKeyValues();
       for(size_t i=0;i<KVs.size();i++) {
-        if((StringRef((KVs[i]->getIdent()))).compare(PACO::KV_STRATEGY) == 0) {
+        if((StringRef((KVs[i]->getIdent()))).compare(PACO::KV_STRATEGY) == 0) { //TODOPACO: add also a count of arguments
           stopEmit = true;
         }
       }

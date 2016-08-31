@@ -1412,15 +1412,18 @@ Parser::TryAnnotateName(bool IsAddressOfOperand,
     // It's not something we know about. Leave it unannotated.
     break;
 
-  case Sema::NC_Type:
+  case Sema::NC_Type:{
     Tok.setKind(tok::annot_typename);
+    ParsedType pt = (Classification.getType());
+    QualType test;
+    test = pt.get();
     setTypeAnnotation(Tok, Classification.getType());
     Tok.setAnnotationEndLoc(NameLoc);
     if (SS.isNotEmpty())
       Tok.setLocation(SS.getBeginLoc());
     PP.AnnotateCachedTokens(Tok);
     return ANK_Success;
-
+  }
   case Sema::NC_Expression:
     Tok.setKind(tok::annot_primary_expr);
     setExprAnnotation(Tok, Classification.getExpression());
