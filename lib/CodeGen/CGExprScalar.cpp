@@ -412,7 +412,7 @@ public:
       case LangOptions::SOB_Undefined:
         if (!CGF.SanOpts->SignedIntegerOverflow) {
           // PACO: Creating the approx add node      
-          if (op.E->getNeglectMask()) {
+          if (Ops.E->getNeglectMask()) {
             uint32_t neglectVal = Ops.E->getNeglectMask()->getInt()
                                   .getZExtValue();
             // Is this neglect mask not precise?
