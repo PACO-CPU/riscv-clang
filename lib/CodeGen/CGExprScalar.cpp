@@ -420,7 +420,7 @@ public:
               neglectVal = neglectVal >> 1; /* the last bit is implicit */
               llvm::ConstantInt *constInt = Builder.getInt32(neglectVal);
               return Builder.CreateCall3(CGF.CGM.getIntrinsic(
-                                         llvm::Intrinsic::int_riscv_mul_approx_op64), 
+                                         llvm::Intrinsic::riscv_mul_approx_op64), 
                                          Ops.LHS, Ops.RHS, constInt);
             } 
           }
