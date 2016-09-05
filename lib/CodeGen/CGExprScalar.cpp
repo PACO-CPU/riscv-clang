@@ -405,28 +405,29 @@ public:
 
   // Binary Operators.
   Value *EmitMul(const BinOpInfo &Ops) {
+    // PACO: Creating the approx mul node
+    if(CGF.getLangOpts().PACO) {
+      if (Ops.E->getNeglectMask()) {
+        uint32_t neglectVal = Ops.E->getNeglectMask()->getInt()
+                              .getZExtValue();
+        // Is this neglect mask not precise?
+        if (neglectVal != PACO::APPROX_PRECISE) {
+          neglectVal = neglectVal >> 1; /* the last bit is implicit */
+          llvm::ConstantInt *constInt = Builder.getInt32(neglectVal);
+          return Builder.CreateCall3(CGF.CGM.getIntrinsic(
+                                     llvm::Intrinsic::riscv_mul_approx_op64), 
+                                     Ops.LHS, Ops.RHS, constInt);
+        } 
+      }
+    }
+    // PACO: Modification End
     if (Ops.Ty->isSignedIntegerOrEnumerationType()) {
       switch (CGF.getLangOpts().getSignedOverflowBehavior()) {
       case LangOptions::SOB_Defined:
         return Builder.CreateMul(Ops.LHS, Ops.RHS, "mul");
       case LangOptions::SOB_Undefined:
-        if (!CGF.SanOpts->SignedIntegerOverflow) {
-          // PACO: Creating the approx add node      
-          if (Ops.E->getNeglectMask()) {
-            uint32_t neglectVal = Ops.E->getNeglectMask()->getInt()
-                                  .getZExtValue();
-            // Is this neglect mask not precise?
-            if (neglectVal != PACO::APPROX_PRECISE) {
-              neglectVal = neglectVal >> 1; /* the last bit is implicit */
-              llvm::ConstantInt *constInt = Builder.getInt32(neglectVal);
-              return Builder.CreateCall3(CGF.CGM.getIntrinsic(
-                                         llvm::Intrinsic::riscv_mul_approx_op64), 
-                                         Ops.LHS, Ops.RHS, constInt);
-            } 
-          }
-          // PACO: Modification End
+        if (!CGF.SanOpts->SignedIntegerOverflow)
           return Builder.CreateNSWMul(Ops.LHS, Ops.RHS, "mul");
-        }
         // Fall through.
       case LangOptions::SOB_Trapping:
         return EmitOverflowCheckedBinOp(Ops);
@@ -2410,29 +2411,30 @@ Value *ScalarExprEmitter::EmitAdd(const BinOpInfo &op) {
   if (op.LHS->getType()->isPointerTy() ||
       op.RHS->getType()->isPointerTy())
     return emitPointerArithmetic(CGF, op, /*subtraction*/ false);
+  // PACO: Creating the approx add node  
+  if(CGF.getLangOpts().PACO) {    
+    if (op.E->getNeglectMask()) {
+      uint32_t neglectVal = op.E->getNeglectMask()->getInt()
+                            .getZExtValue();
+      // Is this neglect mask not precise?
+      if (neglectVal != PACO::APPROX_PRECISE) {
+        neglectVal = neglectVal >> 1; /* the last bit is implicit */
+        llvm::ConstantInt *constInt = Builder.getInt32(neglectVal);
+        return Builder.CreateCall3(CGF.CGM.getIntrinsic(
+                                   llvm::Intrinsic::riscv_add_approx_op64), 
+                                   op.LHS, op.RHS, constInt);
+      } 
+    }
+  }
+  // PACO: Modification End
 
   if (op.Ty->isSignedIntegerOrEnumerationType()) {
     switch (CGF.getLangOpts().getSignedOverflowBehavior()) {
     case LangOptions::SOB_Defined:
       return Builder.CreateAdd(op.LHS, op.RHS, "add");
     case LangOptions::SOB_Undefined:
-      if (!CGF.SanOpts->SignedIntegerOverflow) {
-        // PACO: Creating the approx add node      
-        if (op.E->getNeglectMask()) {
-          uint32_t neglectVal = op.E->getNeglectMask()->getInt()
-                                .getZExtValue();
-          // Is this neglect mask not precise?
-          if (neglectVal != PACO::APPROX_PRECISE) {
-            neglectVal = neglectVal >> 1; /* the last bit is implicit */
-            llvm::ConstantInt *constInt = Builder.getInt32(neglectVal);
-            return Builder.CreateCall3(CGF.CGM.getIntrinsic(
-                                       llvm::Intrinsic::riscv_add_approx_op64), 
-                                       op.LHS, op.RHS, constInt);
-          } 
-        }
-        // PACO: Modification End
+      if (!CGF.SanOpts->SignedIntegerOverflow)
         return Builder.CreateNSWAdd(op.LHS, op.RHS, "add");
-     }
       // Fall through.
     case LangOptions::SOB_Trapping:
       return EmitOverflowCheckedBinOp(op);
@@ -2454,6 +2456,23 @@ Value *ScalarExprEmitter::EmitAdd(const BinOpInfo &op) {
 }
 
 Value *ScalarExprEmitter::EmitSub(const BinOpInfo &op) {
+  // PACO: Creating the approx sub node
+  if(CGF.getLangOpts().PACO) {
+    if (op.E->getNeglectMask()) {
+      uint32_t neglectVal = op.E->getNeglectMask()->getInt()
+                            .getZExtValue();
+      // Is this neglect mask not precise?
+      if (neglectVal != PACO::APPROX_PRECISE) {
+        neglectVal = neglectVal >> 1; /* the last bit is implicit */
+        llvm::ConstantInt *constInt = Builder.getInt32(neglectVal);
+        return Builder.CreateCall3(CGF.CGM.getIntrinsic(
+                                   llvm::Intrinsic::riscv_sub_approx_op64), 
+                                   op.LHS, op.RHS, constInt);
+      } 
+    }
+  }
+  // PACO: End of modification
+  
   // The LHS is always a pointer if either side is.
   if (!op.LHS->getType()->isPointerTy()) {
     if (op.Ty->isSignedIntegerOrEnumerationType()) {
@@ -2461,24 +2480,8 @@ Value *ScalarExprEmitter::EmitSub(const BinOpInfo &op) {
       case LangOptions::SOB_Defined:
         return Builder.CreateSub(op.LHS, op.RHS, "sub");
       case LangOptions::SOB_Undefined:
-        if (!CGF.SanOpts->SignedIntegerOverflow) {
-          // PACO: Creating the approx sub node
-          if (op.E->getNeglectMask()) {
-            uint32_t neglectVal = op.E->getNeglectMask()->getInt()
-                                    .getZExtValue();
-            // Is this neglect mask not precise?
-            if (neglectVal != PACO::APPROX_PRECISE) {
-              neglectVal = neglectVal >> 1; /* the last bit is implicit */
-              llvm::ConstantInt *constInt = Builder.getInt32(neglectVal);
-              return Builder.CreateCall3(CGF.CGM.getIntrinsic(
-                                         llvm::Intrinsic::riscv_sub_approx_op64), 
-                                         op.LHS, op.RHS, constInt);
-            } 
-          }
-          // PACO: End of modification
+        if (!CGF.SanOpts->SignedIntegerOverflow)
           return Builder.CreateNSWSub(op.LHS, op.RHS, "sub");
-          
-        }
         // Fall through.
       case LangOptions::SOB_Trapping:
         return EmitOverflowCheckedBinOp(op);

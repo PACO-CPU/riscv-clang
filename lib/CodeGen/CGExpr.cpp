@@ -3004,8 +3004,9 @@ RValue CodeGenFunction::EmitCallExpr(const CallExpr *E,
               //1 arg
               v1 = EmitScalarExpr(ArgExprs[0]);
               strange = llvm::ConstantInt::get(llvm::IntegerType::get(getLLVMContext(), 32), *(const_cast<llvm::APInt*>(new llvm::APInt(32, 0, false))));
-              charm = llvm::ConstantInt::get(llvm::IntegerType::get(getLLVMContext(), 32), *(const_cast<llvm::APInt*>(new llvm::APInt(32, 0, false))));
-              llvm::Value *Arg_Array[] = {v1, UUID_1, UUID_2, UUID_3, UUID_4, strange, charm};
+              //Charm is used to identify the pseudo instructions, not needed as input here
+              //charm = llvm::ConstantInt::get(llvm::IntegerType::get(getLLVMContext(), 32), *(const_cast<llvm::APInt*>(new llvm::APInt(32, 0, false))));
+              llvm::Value *Arg_Array[] = {v1, UUID_1, UUID_2, UUID_3, UUID_4, strange};
               ArrayRef<llvm::Value *> Args;
               Args = Arg_Array;
               return RValue::get(Builder.CreateCall(CGM.getIntrinsic(
