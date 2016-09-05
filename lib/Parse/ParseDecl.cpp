@@ -2847,10 +2847,12 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
 
     // type-specifier
     case tok::kw_short:
+      setPreApprox();
       isInvalid = DS.SetTypeSpecWidth(DeclSpec::TSW_short, Loc, PrevSpec,
                                       DiagID);
       break;
     case tok::kw_long:
+      setPreApprox();
       if (DS.getTypeSpecWidth() != DeclSpec::TSW_long)
         isInvalid = DS.SetTypeSpecWidth(DeclSpec::TSW_long, Loc, PrevSpec,
                                         DiagID);
@@ -2859,6 +2861,7 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
                                         DiagID);
       break;
     case tok::kw___int64:
+        setPreApprox();
         isInvalid = DS.SetTypeSpecWidth(DeclSpec::TSW_longlong, Loc, PrevSpec,
                                         DiagID);
       break;
@@ -2887,17 +2890,12 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
                                      DiagID);
       break;
     case tok::kw_int:
-      for(int i1= 0; i1 < 3;i1++)
-      {
-        if(PP.LookAhead(i1).is(tok::kw_approx))
-        {
-          preApprox = Tok;
-        }
-      }
+      setPreApprox();
       isInvalid = DS.SetTypeSpecType(DeclSpec::TST_int, Loc, PrevSpec,
                                      DiagID);
       break;
     case tok::kw___int128:
+      setPreApprox();
       isInvalid = DS.SetTypeSpecType(DeclSpec::TST_int128, Loc, PrevSpec,
                                      DiagID);
       break;
@@ -2941,14 +2939,17 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
       }
       break;
     case tok::kw__Decimal32:
+      setPreApprox();
       isInvalid = DS.SetTypeSpecType(DeclSpec::TST_decimal32, Loc, PrevSpec,
                                      DiagID);
       break;
     case tok::kw__Decimal64:
+      setPreApprox();
       isInvalid = DS.SetTypeSpecType(DeclSpec::TST_decimal64, Loc, PrevSpec,
                                      DiagID);
       break;
     case tok::kw__Decimal128:
+      setPreApprox();
       isInvalid = DS.SetTypeSpecType(DeclSpec::TST_decimal128, Loc, PrevSpec,
                                      DiagID);
       break;
@@ -5866,4 +5867,14 @@ std::string Parser::LookAtLutKeyValue(int &index, Token &token) {
 Token Parser::LookAtNextToken(int &position) { 
   position++;
   return PP.LookAhead(position);
+}
+
+void Parser::setPreApprox() {
+  for(int i1= 0; i1 < 3;i1++)
+    {
+      if(PP.LookAhead(i1).is(tok::kw_approx))
+      {
+        preApprox = Tok;
+      }
+    }
 }

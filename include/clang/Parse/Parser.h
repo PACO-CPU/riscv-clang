@@ -226,6 +226,7 @@ public:
   void setSavedRelaxMask(APValue *value) { SavedRelaxMask = value; }
   bool relaxIsSaved() { return RelaxIsSaved; }
   void setRelaxIsSaved(bool isSaved) { RelaxIsSaved = isSaved; }
+  void setPreApprox();
 
   const LangOptions &getLangOpts() const { return PP.getLangOpts(); }
   const TargetInfo &getTargetInfo() const { return PP.getTargetInfo(); }
