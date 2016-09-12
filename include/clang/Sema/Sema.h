@@ -3332,7 +3332,7 @@ public:
                                         ExprResult Init);
   
   //PACO additions
-  
+  void setApproxDecl(Expr *expr, ApproxDecoratorDecl *newApprox);
   ApproxDecoratorDecl *getApproxDecl(Expr *expr);
   APValue *getApproxKeyValue(Expr *expr, std::string keyIdent);
   APValue *getNeglectValue(Expr *expr);

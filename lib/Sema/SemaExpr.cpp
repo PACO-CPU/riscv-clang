@@ -3510,6 +3510,11 @@ static bool checkArithmeticOnObjCPointer(Sema &S,
 ExprResult
 Sema::ActOnArraySubscriptExpr(Scope *S, Expr *base, SourceLocation lbLoc,
                               Expr *idx, SourceLocation rbLoc) {
+  //PACO
+  Expr *approxExpr;
+  approxExpr = base;
+  ApproxDecoratorDecl *approxDecl = getApproxDecl(base);
+  //End PACO
   // Since this might be a postfix expression, get rid of ParenListExprs.
   if (isa<ParenListExpr>(base)) {
     ExprResult result = MaybeConvertParenListExprToParenExpr(S, base);
@@ -3532,6 +3537,10 @@ Sema::ActOnArraySubscriptExpr(Scope *S, Expr *base, SourceLocation lbLoc,
     if (result.isInvalid()) return ExprError();
     idx = result.take();
   }
+  //PACO
+  base->copyPACOValues(approxExpr);
+  setApproxDecl(base, approxDecl);
+  //End PACO
 
   // Build an unanalyzed expression if either operand is type-dependent.
   if (getLangOpts().CPlusPlus &&
@@ -3565,6 +3574,10 @@ Sema::CreateBuiltinArraySubscriptExpr(Expr *Base, SourceLocation LLoc,
                                       Expr *Idx, SourceLocation RLoc) {
   Expr *LHSExp = Base;
   Expr *RHSExp = Idx;
+  //PACO
+  Expr *approxExpr = Base;
+  ApproxDecoratorDecl *approxDecl = getApproxDecl(Base);
+  //End PACO
 
   // Perform default conversions.
   if (!LHSExp->getType()->getAs<VectorType>()) {
@@ -3702,9 +3715,13 @@ Sema::CreateBuiltinArraySubscriptExpr(Expr *Base, SourceLocation LLoc,
 
   assert(VK == VK_RValue || LangOpts.CPlusPlus ||
          !ResultType.isCForbiddenLValueType());
-
-  return Owned(new (Context) ArraySubscriptExpr(LHSExp, RHSExp,
+  ExprResult result = Owned(new (Context) ArraySubscriptExpr(LHSExp, RHSExp,
                                                 ResultType, VK, OK, RLoc));
+  //PACO
+  result.get()->copyPACOValues(approxExpr);
+  setApproxDecl(result.get(), approxDecl);
+  //End PACO
+  return result;
 }
 
 ExprResult Sema::BuildCXXDefaultArgExpr(SourceLocation CallLoc,
@@ -8646,6 +8663,42 @@ static void checkObjCPointerIntrospection(Sema &S, ExprResult &L, ExprResult &R,
   }
 }
 
+void Sema::setApproxDecl(Expr *expr, ApproxDecoratorDecl *newApprox) {
+  if (DeclRefExpr *DRE = dyn_cast<DeclRefExpr>(expr->IgnoreParens())) {
+    if (VarDecl *Var = dyn_cast<VarDecl>(DRE->getDecl())) {
+      Var->SetApproxDecorator(newApprox);
+    }
+  }
+  else if(CallExpr *CE = dyn_cast<CallExpr>(expr->IgnoreParens())) {
+    Expr *ex = CE->getCallee()->IgnoreParenCasts();
+    if (ex!=NULL) {
+      if(DeclRefExpr *DRE = (dyn_cast<DeclRefExpr>(ex))) {
+        if(DRE!=NULL) {
+          Decl *aDecl = DRE->getDecl();
+          if(NamedDecl *Var = dyn_cast<NamedDecl>(aDecl)){
+            Var->SetApproxDecorator(newApprox);
+          }
+        }
+      }
+    }
+  }
+  else if (ArraySubscriptExpr *ASE = dyn_cast<ArraySubscriptExpr>(expr->IgnoreParens())) {
+    if(CastExpr *CE = (dyn_cast<CastExpr>(ASE->getLHS()))) {
+      if(CE!=NULL) {
+        if(DeclRefExpr *DRE = (dyn_cast<DeclRefExpr>(CE->getSubExpr()))) {
+          Decl *aDecl = DRE->getDecl();
+          if(NamedDecl *Var = dyn_cast<NamedDecl>(aDecl)){
+            Var->SetApproxDecorator(newApprox);
+          }
+        }
+      }
+    }
+  }
+  else {
+    // Error? For first impl. do nothing.
+  }
+}
+
 ApproxDecoratorDecl *Sema::getApproxDecl(Expr *expr) {
   if (DeclRefExpr *DRE = dyn_cast<DeclRefExpr>(expr->IgnoreParens())) {
     if (VarDecl *Var = dyn_cast<VarDecl>(DRE->getDecl())) {
@@ -8658,6 +8711,18 @@ ApproxDecoratorDecl *Sema::getApproxDecl(Expr *expr) {
     if (ex!=NULL) {
       if(DeclRefExpr *DRE = (dyn_cast<DeclRefExpr>(ex))) {
         if(DRE!=NULL) {
+          Decl *aDecl = DRE->getDecl();
+          if(NamedDecl *Var = dyn_cast<NamedDecl>(aDecl)){
+            return Var->GetApproxDecorator();
+          }
+        }
+      }
+    }
+  }
+  else if (ArraySubscriptExpr *ASE = dyn_cast<ArraySubscriptExpr>(expr->IgnoreParens())) {
+    if(CastExpr *CE = (dyn_cast<CastExpr>(ASE->getLHS()))) {
+      if(CE!=NULL) {
+        if(DeclRefExpr *DRE = (dyn_cast<DeclRefExpr>(CE->getSubExpr()))) {
           Decl *aDecl = DRE->getDecl();
           if(NamedDecl *Var = dyn_cast<NamedDecl>(aDecl)){
             return Var->GetApproxDecorator();

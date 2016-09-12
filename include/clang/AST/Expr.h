@@ -123,6 +123,9 @@ protected:
     //Initialization for buildExpressionTreeForPACO
     PACOLHS = NULL;
     PACORHS = NULL;
+    neglectMask = NULL;
+    injectMask = NULL;
+    relaxMask = NULL;
   }
 
   /// \brief Construct an empty expression.
