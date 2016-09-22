@@ -518,8 +518,6 @@ struct SplitQualType {
   }
 };
 
-class ApproxDecoratorDecl;
-
 /// QualType - For efficiency, we don't store CV-qualified types as nodes on
 /// their own: instead each reference to a type stores the qualifiers.  This
 /// greatly reduces the number of nodes we need to allocate for types (for
@@ -533,8 +531,6 @@ class ApproxDecoratorDecl;
 /// indicates whether there are extended qualifiers present, in which
 /// case the pointer points to a special structure.
 class QualType {
-  friend class ApproxDecoratorDecl;
-  ApproxDecoratorDecl* ADD = NULL;
   // Thankfully, these are efficiently composable.
   llvm::PointerIntPair<llvm::PointerUnion<const Type*,const ExtQuals*>,
                        Qualifiers::FastWidth> Value;
@@ -560,19 +556,9 @@ public:
   QualType() {}
 
   QualType(const Type *Ptr, unsigned Quals)
-    : Value(Ptr, Quals) {
-      // Remember approx decl on redefinition
-      const QualType *qt ;
-      if((qt = ((const QualType*)Ptr))) {
-        ADD = qt->GetApproxDecorator();
-      }
-    }
+    : Value(Ptr, Quals) {}
   QualType(const ExtQuals *Ptr, unsigned Quals)
     : Value(Ptr, Quals) {}
-  
-  ApproxDecoratorDecl *GetApproxDecorator() {return ADD;}
-  ApproxDecoratorDecl *GetApproxDecorator() const {return (const_cast<QualType*>(this)->GetApproxDecorator());};
-  void SetApproxDecorator(ApproxDecoratorDecl *approx) {ADD = approx;}
 
   unsigned getLocalFastQualifiers() const { return Value.getInt(); }
   void setLocalFastQualifiers(unsigned Quals) { Value.setInt(Quals); }
@@ -596,10 +582,6 @@ public:
   static QualType getFromOpaquePtr(const void *Ptr) {
     QualType T;
     T.Value.setFromOpaqueValue(const_cast<void*>(Ptr));
-    const QualType *orig;
-    const Type *ut = T.getTypePtrUnsafe();
-    orig = (const QualType*)ut;
-    T.SetApproxDecorator(orig->GetApproxDecorator());
     return T;
   }
 

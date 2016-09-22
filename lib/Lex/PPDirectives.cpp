@@ -1564,6 +1564,11 @@ void Preprocessor::HandleIncludeDirective(SourceLocation HashLoc,
     IncludePos = SourceMgr.getExpansionRange(IncludePos).second;
   FileID FID = SourceMgr.createFileID(File, IncludePos, FileCharacter);
   assert(!FID.isInvalid() && "Expected valid file ID");
+  
+  //PACO
+  //std::string *elements = PP.includeEntries
+  //PP.includeEntries.insert()
+  //End PACO
 
   // Finally, if all is good, enter the new file!
   EnterSourceFile(FID, CurDir, FilenameTok.getLocation());

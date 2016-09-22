@@ -8700,32 +8700,34 @@ void Sema::setApproxDecl(Expr *expr, ApproxDecoratorDecl *newApprox) {
 }
 
 ApproxDecoratorDecl *Sema::getApproxDecl(Expr *expr) {
-  if (DeclRefExpr *DRE = dyn_cast<DeclRefExpr>(expr->IgnoreParens())) {
-    if (VarDecl *Var = dyn_cast<VarDecl>(DRE->getDecl())) {
-      return Var->GetApproxDecorator();
+  if(expr!=NULL){
+    if (DeclRefExpr *DRE = dyn_cast<DeclRefExpr>(expr->IgnoreParens())) {
+      if (VarDecl *Var = dyn_cast<VarDecl>(DRE->getDecl())) {
+        return Var->GetApproxDecorator();
+      }
     }
-  }
-  else if(CallExpr *CE = dyn_cast<CallExpr>(expr->IgnoreParens())) {
-    Expr *ex = CE->getCallee()->IgnoreParenCasts();
-    
-    if (ex!=NULL) {
-      if(DeclRefExpr *DRE = (dyn_cast<DeclRefExpr>(ex))) {
-        if(DRE!=NULL) {
-          Decl *aDecl = DRE->getDecl();
-          if(NamedDecl *Var = dyn_cast<NamedDecl>(aDecl)){
-            return Var->GetApproxDecorator();
+    else if(CallExpr *CE = dyn_cast<CallExpr>(expr->IgnoreParens())) {
+      Expr *ex = CE->getCallee()->IgnoreParenCasts();
+      
+      if (ex!=NULL) {
+        if(DeclRefExpr *DRE = (dyn_cast<DeclRefExpr>(ex))) {
+          if(DRE!=NULL) {
+            Decl *aDecl = DRE->getDecl();
+            if(NamedDecl *Var = dyn_cast<NamedDecl>(aDecl)){
+              return Var->GetApproxDecorator();
+            }
           }
         }
       }
     }
-  }
-  else if (ArraySubscriptExpr *ASE = dyn_cast<ArraySubscriptExpr>(expr->IgnoreParens())) {
-    if(CastExpr *CE = (dyn_cast<CastExpr>(ASE->getLHS()))) {
-      if(CE!=NULL) {
-        if(DeclRefExpr *DRE = (dyn_cast<DeclRefExpr>(CE->getSubExpr()))) {
-          Decl *aDecl = DRE->getDecl();
-          if(NamedDecl *Var = dyn_cast<NamedDecl>(aDecl)){
-            return Var->GetApproxDecorator();
+    else if (ArraySubscriptExpr *ASE = dyn_cast<ArraySubscriptExpr>(expr->IgnoreParens())) {
+      if(CastExpr *CE = (dyn_cast<CastExpr>(ASE->getLHS()))) {
+        if(CE!=NULL) {
+          if(DeclRefExpr *DRE = (dyn_cast<DeclRefExpr>(CE->getSubExpr()))) {
+            Decl *aDecl = DRE->getDecl();
+            if(NamedDecl *Var = dyn_cast<NamedDecl>(aDecl)){
+              return Var->GetApproxDecorator();
+            }
           }
         }
       }
@@ -8742,6 +8744,13 @@ APValue *Sema::getApproxKeyValue(Expr *expr, std::string keyIdent) {
 
     for(std::vector<ApproxDecoratorDecl::KeyValue*>::size_type i = 0; i != KeyValues.size(); i++) {
       if (StringRef(KeyValues[i]->getIdent()).compare(keyIdent) == 0) {
+        if(keyIdent.compare(PACO::KV_STRATEGY) == 0) {
+          //return total approx to fit into every approx value
+          llvm::APSInt aint = llvm::APSInt(7);
+          aint = 0;
+          result = new APValue(aint);
+        }
+        else
           result = new APValue(KeyValues[i]->getNum());
       }
     }
@@ -8750,7 +8759,7 @@ APValue *Sema::getApproxKeyValue(Expr *expr, std::string keyIdent) {
 }
 APValue *Sema::getNeglectValue(Expr *expr) {
   APValue * neglectValue = getApproxKeyValue(expr, PACO::KV_NEGLECT_AMOUNT);
-  APValue *maskValue = getApproxKeyValue(expr, PACO::KV_MASK);
+  APValue * maskValue = getApproxKeyValue(expr, PACO::KV_MASK);
   if(neglectValue != NULL)
     return neglectValue;
   else
@@ -8777,6 +8786,14 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
   testVal = NULL;
   leftIsImmediate = CheckImmediate(LHSExpr);
   rightIsImmediate = CheckImmediate(RHSExpr);
+  // relaxMask has to be set before left and right inject mask because LUT inputs
+  // mimic the result neglect value to fit into approx and non approx values
+  if(relaxAPValue!=NULL) {
+    relaxMask = *(relaxAPValue->getInt().getRawData());
+  }
+  else {
+    relaxMask = PACO::APPROX_PRECISE; //all precise
+  }
   
   expr->setPACOLHS(LHSExpr);
   expr->setPACORHS(RHSExpr);
@@ -8811,6 +8828,10 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
         leftInjectMask = *(testVal->getInt().getRawData());
       else
         leftInjectMask = PACO::APPROX_PRECISE; //all precise
+      // If input is LUT value mimic relaxMask
+      if(getApproxKeyValue(LHSExpr, PACO::KV_STRATEGY) != NULL) {
+        leftInjectMask = relaxMask;
+      }
     }
   }
   else {
@@ -8849,6 +8870,10 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
         rightInjectMask = *(testVal->getInt().getRawData());
       else
         rightInjectMask = PACO::APPROX_PRECISE; //all precise
+      // If input is LUT value mimic relaxMask
+      if(getApproxKeyValue(RHSExpr, PACO::KV_STRATEGY) != NULL) {
+        rightInjectMask = relaxMask;
+      }
     }
   }
   else {
@@ -8882,12 +8907,6 @@ void Sema::SetMasks(Expr *expr, Expr *LHSExpr, Expr *RHSExpr, APValue *relaxAPVa
   aint = injectMask;
   APValue* result = new APValue(aint);
   expr->setInjectMask(result);
-  if(relaxAPValue!=NULL) {
-    relaxMask = *(relaxAPValue->getInt().getRawData());
-  }
-  else {
-    relaxMask = PACO::APPROX_PRECISE; //all precise
-  }
   //Test if injectMask fits into relaxMask
   if((relaxMask&injectMask)==relaxMask) {
     expr->setNeglectMask(expr->getInjectMask());

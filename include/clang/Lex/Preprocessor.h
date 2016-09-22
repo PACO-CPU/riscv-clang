@@ -32,6 +32,7 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Allocator.h"
 #include <vector>
+#include <map>
 
 namespace llvm {
   template<unsigned InternalLen> class SmallString;
@@ -92,6 +93,10 @@ class Preprocessor : public RefCountedBase<Preprocessor> {
   ScratchBuffer     *ScratchBuf;
   HeaderSearch      &HeaderInfo;
   ModuleLoader      &TheModuleLoader;
+  
+  //PACO
+  std::map <int, std::string* > includeEntries;
+  //End PACO
 
   /// \brief External source of macros.
   ExternalPreprocessorSource *ExternalSource;

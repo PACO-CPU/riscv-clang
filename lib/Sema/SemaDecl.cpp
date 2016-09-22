@@ -4456,8 +4456,6 @@ Sema::ActOnTypedefDeclarator(Scope* S, Declarator& D, DeclContext* DC,
   if(getLangOpts().PACO) {
     // Add approx decl
     ND->SetApproxDecorator(D.getDeclSpec().GetApproxDecorator());
-    TypedefDecl *td = (reinterpret_cast<TypedefDecl*>(ND));
-    td->getTypeSourceInfo()->getType().SetApproxDecorator(D.getDeclSpec().GetApproxDecorator());
   }
   return ND;
 }
@@ -9317,7 +9315,6 @@ TypedefDecl *Sema::ParseTypedefDecl(Scope *S, Declarator &D, QualType T,
   if(getLangOpts().PACO) {
     ApproxDecoratorDecl *APD = D.getDeclSpec().GetApproxDecorator();
     NewTD->SetApproxDecorator(APD);
-    NewTD->getTypeSourceInfo()->getType().SetApproxDecorator(APD);
   }
   return NewTD;
 }

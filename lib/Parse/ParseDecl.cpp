@@ -2489,8 +2489,6 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
           isInvalid = DS.SetTypeSpecType(DeclSpec::TST_typename,
                                          Tok.getAnnotationEndLoc(),
                                          PrevSpec, DiagID, T);
-          if(getLangOpts().PACO)
-            DS.SetApproxDecorator(T.get().GetApproxDecorator(), Tok.getAnnotationEndLoc(),PrevSpec, DiagID);
           if (isInvalid)
             break;
         }
@@ -2564,10 +2562,6 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
         ParsedType T = getTypeAnnotation(Tok);
         isInvalid = DS.SetTypeSpecType(DeclSpec::TST_typename, Loc, PrevSpec,
                                        DiagID, T);
-        if(getLangOpts().PACO) {
-          QualType qt = QualType::getFromOpaquePtr(Tok.getAnnotationValue());
-          DS.SetApproxDecorator(qt.GetApproxDecorator(), Loc, PrevSpec, DiagID);
-        }
       } else
         DS.SetTypeSpecError();
 
