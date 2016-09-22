@@ -5813,7 +5813,11 @@ std::string Parser::ParseLutStrategy() {
   std::string filename = sourcePath + strId + ".input";	  
   //Wrting the stuff to file
   std::ofstream out(filename.c_str());
-
+  
+  //Prechecking bounds
+  numSegments.erase(std::find(numSegments.begin(), numSegments.end(), '\"'));
+  numSegments.erase(std::find(numSegments.begin(), numSegments.end(), '\"'));
+  
   //Printing the stuff
   std::string header = "name = \"" + strId + "\"\n";
   header = header + PACO::KV_NUM_SEGMENTS + " = " + numSegments + "\n";
