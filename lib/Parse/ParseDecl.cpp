@@ -5823,6 +5823,19 @@ std::string Parser::ParseLutStrategy() {
   
   header = header + "\n%%\n\n" + name + " " + ret + " -> " + ret + "\n\n%%\n\n\n";
   
+  std::string includeEntryStr = "\n";
+  std::vector<Preprocessor::IncludeEntry*> includeEntries;
+  includeEntries = PP.getIncludeEntries();
+  //loop over all include entries
+  for(size_t i=0;i<includeEntries.size();i++) {
+    //if include entry is content from the current read file
+    if(includeEntries[i]->getFileID() == PP.getCurrentFileLexer()->getFileID()) {
+      //append include entry to body
+      includeEntryStr = includeEntryStr + "#include " + includeEntries[i]->getInclude() + "\n";
+    }
+  }
+  includeEntryStr = includeEntryStr + "\n";
+  
   std::string sig = ret + " " + name + " " + signature;	  
   //printf("\n%%%%\n\n%s %s -> %s\n\n%%%%\n\n\n", name.c_str(), ret.c_str(), ret.c_str());                  
   //printf("%s %s %s",ret.c_str(),name.c_str(), signature.c_str());
@@ -5830,6 +5843,7 @@ std::string Parser::ParseLutStrategy() {
   next = LookAtNextToken(index);
   //Writing the function body to string
   std::string body ="";
+  
   while(!next.is(tok::r_brace)) {                                                                            
     //next = PP.LookAhead(index);                                                                               
     body = body + PP.getSpelling(next).data() + " ";                                                               
@@ -5840,7 +5854,7 @@ std::string Parser::ParseLutStrategy() {
   }                  
   body = body + "}";
  
-  std::string input = header + sig + body;
+  std::string input = header + includeEntryStr + sig + body;
   out << input;
   out.close();
   return strId;

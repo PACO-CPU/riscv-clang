@@ -95,7 +95,34 @@ class Preprocessor : public RefCountedBase<Preprocessor> {
   ModuleLoader      &TheModuleLoader;
   
   //PACO
-  std::map <int, std::string* > includeEntries;
+public: 
+  class IncludeEntry {
+    friend class Preprocessor;
+  protected:
+    std::string _include;
+    FileID _fileID;
+  public:
+    IncludeEntry(std::string includeStr, FileID fileID):
+      _include(includeStr), _fileID(fileID) {}
+      
+      std::string getInclude() { return _include;}
+      FileID getFileID() { return _fileID;}
+  };
+  
+  std::vector<IncludeEntry*> includeEntries;
+  
+  const std::vector<IncludeEntry*> &getIncludeEntries() {
+    return includeEntries;
+  }
+  
+  const std::vector<IncludeEntry*> &getIncludeEntries() const{
+    return includeEntries;
+  }
+  
+  void appendInclude(IncludeEntry *kv) {
+    includeEntries.push_back(kv);
+  }
+  
   //End PACO
 
   /// \brief External source of macros.

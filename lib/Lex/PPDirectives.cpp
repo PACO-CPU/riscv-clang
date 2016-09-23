@@ -1566,8 +1566,14 @@ void Preprocessor::HandleIncludeDirective(SourceLocation HashLoc,
   assert(!FID.isInvalid() && "Expected valid file ID");
   
   //PACO
-  //std::string *elements = PP.includeEntries
-  //PP.includeEntries.insert()
+  switch (IncludeTok.getIdentifierInfo()->getPPKeywordID()) {
+    case tok::pp_include:
+      appendInclude(new Preprocessor::IncludeEntry(OriginalFilename.str(), getCurrentFileLexer()->getFileID()));
+      break;
+    default:
+      //Do nothing
+      ;
+  }
   //End PACO
 
   // Finally, if all is good, enter the new file!
